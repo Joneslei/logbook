@@ -3796,10 +3796,7 @@
                 '</div>';
             });
 
-            html += '<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:12px;">' +
-                '<img src="LOGO.png" alt="" style="height:44px;opacity:0.6;flex-shrink:0;">' +
-                '<div class="bill-amount" style="margin-top:0;">合计：¥' + total + '</div>' +
-            '</div>';
+            html += '<div class="bill-amount">合计：¥' + total + '</div>';
             html += '<div class="bill-footer">' +
                 '<div class="bill-footer-text">📍 安徽省芜湖市镜湖区融汇中江广场西区3楼328号</div>' +
                 '<div class="bill-footer-text" style="margin-top:5px;">📞 15655305888（微信同号）</div>' +
