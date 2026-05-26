@@ -1,0 +1,13 @@
+.claude/
+node_modules/
+package.json
+package-lock.json
+*.js.bak
+build.js
+optimize.js
+split.js
+glass.js
+neo.js
+warm.js
+real.js
+swiss.js

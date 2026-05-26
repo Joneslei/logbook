@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>蒋故事记账工具</title>
+    <link rel="icon" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="theme-color" content="#1e40af">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-box">
+            <div class="login-icon"><img src="LOGO.png" alt="Logo" style="max-width:120px;max-height:80px;"></div>
+            <div class="login-title">蒋故事记账工具</div>
+            <div class="login-subtitle">请输入密码以访问</div>
+            <input type="password" id="loginPassword" class="login-input" placeholder="······" maxlength="20" autofocus>
+            <button class="login-btn" onclick="doLogin()">进入</button>
+            <div id="loginError" class="login-error"></div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">正在加载云端数据...</div>
+    </div>
+    <div id="toastContainer" class="toast-container"></div>
+    <div id="syncStatus" class="sync-status online"><div class="sync-dot"></div><span id="syncText">已连接</span></div>
+    <div class="container">
+        <div class="sticky-header">
+            <div style="display:flex; justify-content:center; align-items:center; margin-bottom:8px; position:relative;">
+                <h1 style="margin:0;">蒋故事记账工具</h1>
+                <button class="eye-toggle" onclick="toggleStatsMask()" id="eyeBtn" title="隐藏/显示金额">
+                    <svg id="eyeIconShow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg id="eyeIconHide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-box"><div class="stat-label">总记录数</div><div class="stat-value masked" id="totalRecords">***</div></div>
+                <div class="stat-box"><div class="stat-label">总数量</div><div class="stat-value masked" id="totalQty">***</div></div>
+                <div class="stat-box"><div class="stat-label">总金额</div><div class="stat-value masked" id="totalAmount">***</div></div>
+                <div class="stat-box highlight"><div class="stat-label">选中记录</div><div class="stat-value" id="selectedRecords">0</div></div>
+                <div class="stat-box highlight"><div class="stat-label">选中数量</div><div class="stat-value" id="selectedQty">0</div></div>
+                <div class="stat-box highlight"><div class="stat-label">选中金额</div><div class="stat-value" id="selectedAmount">¥0</div></div>
+            </div>
+
+            <div class="filter-area" id="filterArea">
+                <div class="filter-toggle" onclick="toggleFilter()">🔍 筛选条件 <span class="arrow">▼</span></div>
+                <div class="filter-body">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>日期范围：</label>
+                        <input type="date" id="filterDateFrom" onchange="applyFilter()">
+                        <span style="color:#9ca3af;">~</span>
+                        <input type="date" id="filterDateTo" onchange="applyFilter()">
+                    </div>
+                    <div class="filter-group">
+                        <label>快捷月份：</label>
+                        <select id="quickMonth" onchange="setQuickMonth(this.value)">
+                            <option value="">选择月份</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <div class="quick-date">
+                            <button class="btn-filter btn-blue" data-qd="today" onclick="setQuickDate('today', this)">今天</button>
+                            <button class="btn-filter btn-blue" data-qd="yesterday" onclick="setQuickDate('yesterday', this)">昨天</button>
+                            <button class="btn-filter btn-blue" data-qd="week" onclick="setQuickDate('week', this)">本周</button>
+                            <button class="btn-filter btn-blue" data-qd="month" onclick="setQuickDate('month', this)">本月</button>
+                            <button class="btn-filter btn-blue" data-qd="lastMonth" onclick="setQuickDate('lastMonth', this)">上月</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>搜索：</label>
+                        <input type="text" class="search-input" id="searchKeyword" placeholder="客户/项目关键词">
+                    </div>
+                    <div class="filter-group">
+                        <label>客户1：</label>
+                        <select id="filterCustomer1" onchange="applyFilter()" style="min-width:100px;"><option value="">全部</option></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>客户2：</label>
+                        <select id="filterCustomer2" onchange="applyFilter()" style="min-width:100px;"><option value="">全部</option></select>
+                    </div>
+                    <div class="filter-group" id="paidFilterGroup">
+                        <label>付款状态：</label>
+                        <button class="btn-filter paid-filter-btn active" data-paid="" onclick="setPaidFilter('', this)">全部</button>
+                        <button class="btn-filter paid-filter-btn" data-paid="unpaid" onclick="setPaidFilter('unpaid', this)">未结账</button>
+                        <button class="btn-filter paid-filter-btn" data-paid="paid" onclick="setPaidFilter('paid', this)">已结账</button>
+                    </div>
+                    <div class="filter-group">
+                        <button class="btn-filter btn-green" onclick="resetFilter()">重置筛选</button>
+                    </div>
+                    <div class="filter-group">
+                        <button class="btn-filter btn-orange" onclick="generateBill()">📝 生成账单</button>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- 悬浮添加按钮 -->
+            <button class="fab-add" id="fabBtn">＋</button>
+            <div class="fab-overlay" id="fabOverlay" onclick="toggleInput()"></div>
+
+            <div class="input-area">
+                <div class="input-group">
+                    <label>日期</label>
+                    <input type="date" id="inputDate">
+                </div>
+                <div class="input-group" style="position:relative;">
+                    <label>客户名称</label>
+                    <input type="text" id="inputName" placeholder="客户名字" autocomplete="off">
+                    <div id="customerSuggest" class="suggest-list"></div>
+                </div>
+                <div class="input-group" style="position:relative;">
+                    <label>项目</label>
+                    <input type="text" id="inputProject" placeholder="维修项目" autocomplete="off" onchange="autoFillPrice()">
+                    <div id="projectSuggest" class="suggest-list"></div>
+                </div>
+                <div class="input-group">
+                    <label>单价</label>
+                    <input type="number" id="inputPrice" placeholder="0">
+                </div>
+                <div class="input-group">
+                    <label>数量</label>
+                    <input type="number" id="inputQty" placeholder="1" min="1" value="1">
+                </div>
+                <div class="input-group">
+                    <label>付款情况</label>
+                    <select id="inputPaid">
+                        <option value="">未付</option>
+                        <option value="已付">已付</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>付款方式</label>
+                    <select id="inputMethod">
+                        <option value=""></option>
+                        <option value="微信">微信</option>
+                        <option value="支付宝">支付宝</option>
+                        <option value="现金">现金</option>
+                        <option value="建行码">建行码</option>
+                        <option value="备注">备注</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>备注</label>
+                    <input type="text" id="inputRemark" placeholder="备注信息" style="min-width:120px;">
+                </div>
+                <button class="btn-add" onclick="addRecord()">➕ 添加记录</button>
+            </div>
+        </div>
+
+        <div class="table-area">
+            <div class="scroll-btns">
+                <button class="scroll-btn" onclick="document.querySelector('.table-wrap').scrollTop=0" title="回到顶部">▲</button>
+                <button class="scroll-btn" onclick="document.querySelector('.table-wrap').scrollTop=999999" title="滚到底部">▼</button>
+            </div>
+            <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
+                        <th>序号</th>
+                        <th class="sortable" onclick="toggleSort('date')" style="min-width:100px;">日期<span class="sort-arrow"></span></th>
+                        <th class="sortable" onclick="toggleSort('name')">客户名称<span class="sort-arrow"></span></th>
+                        <th class="sortable" onclick="toggleSort('project')">项目<span class="sort-arrow"></span></th>
+                        <th class="sortable" onclick="toggleSort('price')">单价<span class="sort-arrow"></span></th>
+                        <th class="sortable" onclick="toggleSort('qty')">数量<span class="sort-arrow"></span></th>
+                        <th class="sortable" onclick="toggleSort('total')">总价<span class="sort-arrow"></span></th>
+                        <th class="sortable" onclick="toggleSort('paid')">付款情况<span class="sort-arrow"></span></th>
+                        <th class="sortable" onclick="toggleSort('method')">付款方式<span class="sort-arrow"></span></th>
+                        <th style="min-width:120px;">备注</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="recordTable"></tbody>
+            </table>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+        </div>
+
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="tb-btn tb-export" onclick="exportToExcel()">📊 导出</button>
+                <button class="tb-btn tb-backup" onclick="manualBackup()">💾 备份</button>
+                <button class="tb-btn tb-restore" onclick="restoreBackup()">📂 恢复</button>
+                <button class="tb-btn tb-clear" onclick="clearAll()">🗑️ 清空</button>
+                <input type="file" id="restoreFile" accept=".csv" style="display:none" onchange="handleRestore(event)">
+            </div>
+            <div class="toolbar-divider"></div>
+            <div class="toolbar-group">
+                <span class="tb-label">批量付款</span>
+                <select id="batchPayStatus" class="tb-select">
+                    <option value="已付">已付</option>
+                    <option value="">未付</option>
+                </select>
+                <select id="batchPayMethod" class="tb-select">
+                    <option value="微信">微信</option>
+                    <option value="支付宝">支付宝</option>
+                    <option value="现金">现金</option>
+                    <option value="建行码">建行码</option>
+                    <option value="备注">备注</option>
+                </select>
+                <button class="tb-btn tb-batch" onclick="batchPay()">💰 确认</button>
+            </div>
+        </div>
+        <div class="shortcuts-hint">
+            快捷键：<kbd>Ctrl+Z</kbd> 撤销删除 · <kbd>Ctrl+S</kbd> 快速备份 · <kbd>Esc</kbd> 关闭弹窗 · 点击表头可排序
+        </div>
+
+    </div>
+
+    <!-- 账单弹窗 -->
+    <div class="modal" id="billModal">
+        <div class="modal-content" id="modalContent">
+            <div class="modal-header">
+                <h2 style="margin:0;font-size:18px;color:#1e293b;">📋 客户账单</h2>
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="billContent" style="text-align:center;"></div>
+            <button class="btn-export-img" onclick="exportBillAsImage()">📸 导出图片</button>
+            <button class="btn-copy" onclick="copyBill()" style="margin-top:12px;">📋 复制账单文本</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js?v=2"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
