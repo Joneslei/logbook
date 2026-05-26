@@ -3766,7 +3766,7 @@
             if (!unpaidRecords.length) { showToast('该客户没有未结账的记录！', 'info'); return; }
 
             const today = new Date().toLocaleDateString('zh-CN');
-            let html = '<div class="bill-card" style="background-image:url(logo-watermark.png);background-repeat:repeat;background-size:260px;background-position:center;">';
+            let html = '<div class="bill-card" style="background-image:url(logo-watermark.png);background-repeat:repeat;background-size:480px;background-position:center;">';
             html += '<div style="background:rgba(255,255,255,0.8);">';
             html += '<div class="bill-title">📋 客户结算单</div>';
             html += '<div class="bill-info">' +
