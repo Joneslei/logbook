@@ -3766,7 +3766,17 @@
             if (!unpaidRecords.length) { showToast('该客户没有未结账的记录！', 'info'); return; }
 
             const today = new Date().toLocaleDateString('zh-CN');
-            let html = '<div class="bill-card">';
+            let html = '<div class="bill-card" style="position:relative;overflow:hidden;">';
+            // 斜向水印：-28°排列，大间距
+            var logoSize = 80, gapX = logoSize * 2.5, gapY = logoSize * 2;
+            for (var row = -1; row <= 6; row++) {
+                for (var col = -1; col <= 10; col++) {
+                    var left = col * gapX + (row % 2 === 0 ? 0 : gapX / 2);
+                    var top = row * gapY;
+                    html += '<img src="LOGO.png" alt="" style="position:absolute;left:'+left+'px;top:'+top+'px;width:'+logoSize+'px;opacity:0.18;transform:rotate(-28deg);pointer-events:none;">';
+                }
+            }
+            html += '<div style="position:relative;z-index:1;">';
             html += '<div class="bill-title">📋 客户结算单</div>';
             html += '<div class="bill-info">' +
                 '<div><span class="bill-info-label">客户：</span><span class="bill-info-value">' + esc(customers.join('、')) + '</span></div>' +
@@ -3800,7 +3810,7 @@
             html += '<div class="bill-footer">' +
                 '<div class="bill-footer-text">📍 安徽省芜湖市镜湖区融汇中江广场西区3楼328号</div>' +
                 '<div class="bill-footer-text" style="margin-top:5px;">📞 15655305888（微信同号）</div>' +
-            '</div></div>';
+            '</div></div></div>';
 
             document.getElementById('billContent').innerHTML = html;
             document.getElementById('billModal').style.display = 'block';
