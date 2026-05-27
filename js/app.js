@@ -3773,7 +3773,7 @@
                 for (var col = -1; col <= 7; col++) {
                     var left = col * gapX + (row % 2 === 0 ? 0 : gapX / 2);
                     var top = row * gapY;
-                    html += '<img src="LOGO.png" alt="" style="position:absolute;left:'+left+'px;top:'+top+'px;width:'+logoSize+'px;opacity:0.12;transform:rotate(-28deg);pointer-events:none;">';
+                    html += '<img src="LOGO.png" alt="" style="position:absolute;left:'+left+'px;top:'+top+'px;width:'+logoSize+'px;opacity:0.06;transform:rotate(-28deg);pointer-events:none;">';
                 }
             }
             html += '<div style="position:relative;z-index:1;">';
