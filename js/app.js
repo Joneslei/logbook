@@ -3767,13 +3767,13 @@
 
             const today = new Date().toLocaleDateString('zh-CN');
             let html = '<div class="bill-card" style="position:relative;overflow:hidden;">';
-            // 斜向水印：-28°排列，大间距
-            var logoSize = 80, gapX = logoSize * 2.5, gapY = logoSize * 2;
-            for (var row = -1; row <= 6; row++) {
-                for (var col = -1; col <= 10; col++) {
+            // 斜向水印：-28°排列，大间距，隐约可见
+            var logoSize = 70, gapX = logoSize * 4, gapY = logoSize * 3.5;
+            for (var row = -1; row <= 4; row++) {
+                for (var col = -1; col <= 7; col++) {
                     var left = col * gapX + (row % 2 === 0 ? 0 : gapX / 2);
                     var top = row * gapY;
-                    html += '<img src="LOGO.png" alt="" style="position:absolute;left:'+left+'px;top:'+top+'px;width:'+logoSize+'px;opacity:0.18;transform:rotate(-28deg);pointer-events:none;">';
+                    html += '<img src="LOGO.png" alt="" style="position:absolute;left:'+left+'px;top:'+top+'px;width:'+logoSize+'px;opacity:0.12;transform:rotate(-28deg);pointer-events:none;">';
                 }
             }
             html += '<div style="position:relative;z-index:1;">';
