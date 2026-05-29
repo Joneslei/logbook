@@ -4224,6 +4224,9 @@
                             batchRender();
                             pullIndicator.style.top = '-60px';
                             showToast('数据已刷新', 'success');
+                        }).catch(function() {
+                            pullIndicator.style.top = '-60px';
+                            showToast('刷新失败，请检查网络', 'warning');
                         });
                     }, 500);
                 } else {
