@@ -1,20 +1,41 @@
 // ===== 登录验证 =====
-        const PASSWORD_HASH = '295cedebf5379b6bc3ed38ad3668cd19d3eddaf3bb6f393c0ca658dd54080da4';
+        // 密码配置已移至 config.js
         async function sha256(str) {
             const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
             return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
         }
+
+        // 登录尝试次数限制
+        let loginAttempts = 0;
+        let loginLockoutUntil = 0;
+
         async function doLogin() {
             const input = document.getElementById('loginPassword');
             const errEl = document.getElementById('loginError');
+
+            // 检查是否被锁定
+            if (Date.now() < loginLockoutUntil) {
+                const remaining = Math.ceil((loginLockoutUntil - Date.now()) / 1000);
+                errEl.textContent = '登录尝试次数过多，请等待 ' + remaining + ' 秒';
+                return;
+            }
+
             const hash = await sha256(input.value);
             if (hash === PASSWORD_HASH) {
+                loginAttempts = 0;
                 sessionStorage.setItem('loggedIn', '1');
                 document.getElementById('loginOverlay').style.display = 'none';
                 initApp();
             } else {
+                loginAttempts++;
+                if (loginAttempts >= APP_CONSTANTS.LOGIN_ATTEMPTS_MAX) {
+                    loginLockoutUntil = Date.now() + APP_CONSTANTS.LOGIN_LOCKOUT_DURATION;
+                    errEl.textContent = '登录尝试次数过多，请等待 30 秒';
+                    showToast('登录尝试次数过多，已锁定30秒', 'error');
+                } else {
+                    errEl.textContent = '密码错误，请重试 (' + loginAttempts + '/' + APP_CONSTANTS.LOGIN_ATTEMPTS_MAX + ')';
+                }
                 input.classList.add('error');
-                errEl.textContent = '密码错误，请重试';
                 setTimeout(() => input.classList.remove('error'), 500);
                 input.value = '';
                 input.focus();
@@ -27,18 +48,10 @@
             document.getElementById('loginOverlay').style.display = 'none';
         }
 
-        // ===== Supabase 配置 =====
-        const SB_URL = 'https://jupbscoeollfrymgfvom.supabase.co';
-        const SB_KEY = 'sb_publishable_VGkN1fbsKa_EuWjUIvYPIg_xq11vhMM';
-        const SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
-        function sbUrl(table, params) { return SB_URL + '/rest/v1/' + table + (params || ''); }
-
         // 连接状态管理
         let isOnline = false;
         let _cloudFailCount = 0;
-        const CLOUD_FAIL_MAX = 3;
         let _lastCloudSync = 0;
-        const CLOUD_SYNC_INTERVAL = 15000; // 最少间隔15秒
 
         function goOffline(reason) {
             if (!isOnline) return;
@@ -165,16 +178,15 @@
         }
 
         // ===== 撤销删除 - 持久化 =====
-        const UNDO_MAX = 30;
         let deletedStack = [];
         function loadUndoStack() {
             try {
                 const saved = localStorage.getItem('deletedStack');
-                if (saved) deletedStack = JSON.parse(saved).slice(-UNDO_MAX);
+                if (saved) deletedStack = JSON.parse(saved).slice(-APP_CONSTANTS.UNDO_MAX);
             } catch(e) {}
         }
         function saveUndoStack() {
-            try { localStorage.setItem('deletedStack', JSON.stringify(deletedStack.slice(-UNDO_MAX))); } catch(e) {}
+            try { localStorage.setItem('deletedStack', JSON.stringify(deletedStack.slice(-APP_CONSTANTS.UNDO_MAX))); } catch(e) {}
         }
         function undoDelete() {
             if (deletedStack.length === 0) { showToast('没有可撤销的删除', 'info'); return; }
@@ -202,11 +214,10 @@
         }
 
         // ===== 分页 =====
-        const PAGE_SIZE = 50;
         let currentPage = 1;
 
         function renderPagination(totalFiltered) {
-            const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+            const totalPages = Math.max(1, Math.ceil(totalFiltered / APP_CONSTANTS.PAGE_SIZE));
             if (currentPage > totalPages) currentPage = totalPages;
             const el = document.getElementById('pagination');
             if (totalPages <= 1) { el.innerHTML = ''; return; }
@@ -3037,7 +3048,7 @@
         async function saveToCloud(recordsToSave) {
             if (!isOnline) return;
             // 防抖：距上次同步不到间隔时间则跳过
-            if (Date.now() - _lastCloudSync < CLOUD_SYNC_INTERVAL) return;
+            if (Date.now() - _lastCloudSync < APP_CONSTANTS.CLOUD_SYNC_INTERVAL) return;
             _lastCloudSync = Date.now();
 
             setSyncStatus('syncing', '同步中...');
@@ -3070,8 +3081,8 @@
             } catch (e) {
                 console.warn('云端保存失败', e.message);
                 _cloudFailCount++;
-                if (_cloudFailCount >= CLOUD_FAIL_MAX) goOffline('连续同步失败，已切换离线');
-                else setSyncStatus('offline', '同步失败(' + _cloudFailCount + '/' + CLOUD_FAIL_MAX + ')，本地已保存');
+                if (_cloudFailCount >= APP_CONSTANTS.CLOUD_FAIL_MAX) goOffline('连续同步失败，已切换离线');
+                else setSyncStatus('offline', '同步失败(' + _cloudFailCount + '/' + APP_CONSTANTS.CLOUD_FAIL_MAX + ')，本地已保存');
             }
         }
 
@@ -3277,7 +3288,7 @@
             if (idx < 0) return;
             const removed = records.splice(idx, 1)[0];
             deletedStack.push({ record: removed, index: idx });
-            if (deletedStack.length > UNDO_MAX) deletedStack.shift();
+            if (deletedStack.length > APP_CONSTANTS.UNDO_MAX) deletedStack.shift();
             saveUndoStack();
             invalidateFilterCache();
             recalcSeq();
@@ -3511,11 +3522,11 @@
             const tbody = document.getElementById('recordTable');
             const allFiltered = sortRecords(getFilteredRecords());
             const totalFiltered = allFiltered.length;
-            const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+            const totalPages = Math.max(1, Math.ceil(totalFiltered / APP_CONSTANTS.PAGE_SIZE));
 
             // 分页切片
-            const startIdx = (currentPage - 1) * PAGE_SIZE;
-            const filtered = allFiltered.slice(startIdx, startIdx + PAGE_SIZE);
+            const startIdx = (currentPage - 1) * APP_CONSTANTS.PAGE_SIZE;
+            const filtered = allFiltered.slice(startIdx, startIdx + APP_CONSTANTS.PAGE_SIZE);
 
             let runningQty = 0, runningTotal = 0;
 
@@ -3525,11 +3536,16 @@
                 return;
             }
 
-            tbody.innerHTML = filtered.map(r => {
+            // 使用 DocumentFragment 优化 DOM 操作
+            const fragment = document.createDocumentFragment();
+
+            filtered.forEach(r => {
                 runningQty += r.qty;
                 runningTotal += r.total;
-                return '<tr data-row-id="' + r.id + '" onmouseleave="saveIfDirty(' + r.id + ')">' +
-                    '<td><input type="checkbox" class="row-checkbox" data-id="' + r.id + '" onchange="updateSelectedStats()"></td>' +
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-row-id', r.id);
+                tr.setAttribute('onmouseleave', 'saveIfDirty(' + r.id + ')');
+                tr.innerHTML = '<td><input type="checkbox" class="row-checkbox" data-id="' + r.id + '" onchange="updateSelectedStats()"></td>' +
                     '<td>' + r.seq + '</td>' +
                     '<td>' + esc(r.date) + '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
@@ -3571,9 +3587,13 @@
                         '<span class="text-display">' + esc(r.remark || '') + '</span>' +
                         '<input type="text" class="inline-select select-edit" value="' + esc(r.remark || '') + '" onchange="updateRemark(' + r.id + ', this.value)">' +
                     '</td>' +
-                    '<td><button class="delete-btn" onclick="deleteRecord(' + r.id + ')">删除</button></td>' +
-                '</tr>';
-            }).join('');
+                    '<td><button class="delete-btn" onclick="deleteRecord(' + r.id + ')">删除</button></td>';
+                fragment.appendChild(tr);
+            });
+
+            // 清空并批量插入
+            tbody.innerHTML = '';
+            tbody.appendChild(fragment);
 
             renderPagination(totalFiltered);
         }
@@ -3768,11 +3788,11 @@
             const today = new Date().toLocaleDateString('zh-CN');
             let html = '<div class="bill-card" style="position:relative;overflow:hidden;">';
             // 斜向水印：-28°排列，大间距，隐约可见
-            var logoSize = 70, gapX = logoSize * 4, gapY = logoSize * 3.5;
-            for (var row = -1; row <= 4; row++) {
-                for (var col = -1; col <= 7; col++) {
-                    var left = col * gapX + (row % 2 === 0 ? 0 : gapX / 2);
-                    var top = row * gapY;
+            const logoSize = 70, gapX = logoSize * 4, gapY = logoSize * 3.5;
+            for (let row = -1; row <= 4; row++) {
+                for (let col = -1; col <= 7; col++) {
+                    const left = col * gapX + (row % 2 === 0 ? 0 : gapX / 2);
+                    const top = row * gapY;
                     html += '<img src="LOGO.png" alt="" style="position:absolute;left:'+left+'px;top:'+top+'px;width:'+logoSize+'px;opacity:0.06;transform:rotate(-28deg);pointer-events:none;">';
                 }
             }
@@ -4016,9 +4036,44 @@
             const tag = (e.target.tagName || '').toLowerCase();
             const isInput = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
 
+            // Ctrl+Z - 撤销删除（输入框外）
             if (e.ctrlKey && e.key === 'z' && !isInput) { e.preventDefault(); undoDelete(); }
+
+            // Ctrl+S - 快速备份
             if (e.ctrlKey && e.key === 's') { e.preventDefault(); manualBackup(); showToast('正在下载备份...', 'info'); }
+
+            // Esc - 关闭弹窗
             if (e.key === 'Escape') closeModal();
+
+            // Ctrl+N - 新增记录（聚焦到输入区）
+            if (e.ctrlKey && e.key === 'n' && !isInput) {
+                e.preventDefault();
+                if (window.innerWidth <= 768) {
+                    toggleInput();
+                }
+                document.getElementById('inputName').focus();
+                showToast('已聚焦到输入区', 'info');
+            }
+
+            // Ctrl+F - 聚焦搜索框
+            if (e.ctrlKey && e.key === 'f' && !isInput) {
+                e.preventDefault();
+                document.getElementById('searchKeyword').focus();
+            }
+
+            // Ctrl+Shift+E - 导出数据
+            if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+                e.preventDefault();
+                exportToExcel();
+                showToast('正在导出数据...', 'info');
+            }
+
+            // Ctrl+Shift+B - 备份数据
+            if (e.ctrlKey && e.shiftKey && e.key === 'B') {
+                e.preventDefault();
+                manualBackup();
+                showToast('正在下载备份...', 'info');
+            }
         });
 
         // 点击页面其他区域关闭移动端编辑
@@ -4027,3 +4082,160 @@
                 document.querySelectorAll('.edit-cell.mobile-active').forEach(c => c.classList.remove('mobile-active'));
             }
         });
+
+        // ===== 全局错误捕获 =====
+        window.addEventListener('error', function(e) {
+            console.error('全局错误:', e.error);
+            showToast('发生了一个错误，请刷新页面重试', 'error');
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('未处理的 Promise 错误:', e.reason);
+            showToast('网络请求失败，请检查网络连接', 'error');
+        });
+
+        // ===== 网络状态监听 =====
+        window.addEventListener('online', function() {
+            showToast('网络已恢复', 'success');
+            if (!isOnline) goOnline();
+        });
+
+        window.addEventListener('offline', function() {
+            showToast('网络已断开，切换到离线模式', 'warning');
+            goOffline('网络断开');
+        });
+
+        // ===== 触摸手势支持 =====
+
+        // 左滑删除
+        (function() {
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let currentRow = null;
+            let swipeThreshold = 80;
+
+            document.addEventListener('touchstart', function(e) {
+                const row = e.target.closest('tr[data-row-id]');
+                if (row) {
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                    currentRow = row;
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!currentRow) return;
+                const touchX = e.touches[0].clientX;
+                const touchY = e.touches[0].clientY;
+                const deltaX = touchX - touchStartX;
+                const deltaY = touchY - touchStartY;
+
+                // 只处理水平滑动
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+                    e.preventDefault();
+                    if (deltaX < -swipeThreshold) {
+                        // 左滑显示删除按钮
+                        currentRow.style.transform = 'translateX(-80px)';
+                        currentRow.style.transition = 'transform 0.2s ease';
+                    } else {
+                        currentRow.style.transform = 'translateX(0)';
+                    }
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchend', function(e) {
+                if (!currentRow) return;
+                const touchEndX = e.changedTouches[0].clientX;
+                const deltaX = touchEndX - touchStartX;
+
+                if (deltaX < -swipeThreshold) {
+                    // 保持左滑状态，显示删除按钮
+                    currentRow.style.transform = 'translateX(-80px)';
+                } else {
+                    // 恢复原位
+                    currentRow.style.transform = 'translateX(0)';
+                }
+
+                currentRow = null;
+            }, { passive: true });
+
+            // 点击其他区域恢复
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('tr[data-row-id]')) {
+                    document.querySelectorAll('tr[data-row-id]').forEach(row => {
+                        row.style.transform = 'translateX(0)';
+                    });
+                }
+            });
+        })();
+
+        // 下拉刷新
+        (function() {
+            let pullStartY = 0;
+            let isPulling = false;
+            let pullIndicator = null;
+
+            // 创建下拉指示器
+            function createPullIndicator() {
+                if (pullIndicator) return;
+                pullIndicator = document.createElement('div');
+                pullIndicator.className = 'pull-refresh-indicator';
+                pullIndicator.innerHTML = '<div class="pull-refresh-spinner"></div><span>下拉刷新</span>';
+                pullIndicator.style.cssText = 'position:fixed;top:-60px;left:50%;transform:translateX(-50%);background:#fff;padding:12px 24px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;align-items:center;gap:8px;transition:top 0.3s ease;z-index:1000;';
+                document.body.appendChild(pullIndicator);
+            }
+
+            document.addEventListener('touchstart', function(e) {
+                if (window.scrollY === 0) {
+                    pullStartY = e.touches[0].clientY;
+                    isPulling = true;
+                    createPullIndicator();
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!isPulling || !pullIndicator) return;
+                const pullY = e.touches[0].clientY;
+                const pullDistance = pullY - pullStartY;
+
+                if (pullDistance > 0 && pullDistance < 150) {
+                    pullIndicator.style.top = (pullDistance - 60) + 'px';
+                    if (pullDistance > 80) {
+                        pullIndicator.querySelector('span').textContent = '释放刷新';
+                    } else {
+                        pullIndicator.querySelector('span').textContent = '下拉刷新';
+                    }
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', function(e) {
+                if (!isPulling || !pullIndicator) return;
+                const pullEndY = e.changedTouches[0].clientY;
+                const pullDistance = pullEndY - pullStartY;
+
+                if (pullDistance > 80) {
+                    // 触发刷新
+                    pullIndicator.querySelector('span').textContent = '刷新中...';
+                    pullIndicator.style.top = '10px';
+
+                    // 模拟刷新
+                    setTimeout(function() {
+                        loadFromCloud().then(function() {
+                            batchRender();
+                            pullIndicator.style.top = '-60px';
+                            showToast('数据已刷新', 'success');
+                        });
+                    }, 500);
+                } else {
+                    pullIndicator.style.top = '-60px';
+                }
+
+                isPulling = false;
+                setTimeout(function() {
+                    if (pullIndicator) {
+                        pullIndicator.remove();
+                        pullIndicator = null;
+                    }
+                }, 300);
+            }, { passive: true });
+        })();

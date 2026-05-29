@@ -17,7 +17,7 @@
     <!-- 登录页面 -->
     <div id="loginOverlay" class="login-overlay">
         <div class="login-box">
-            <div class="login-icon"><img src="LOGO.png" alt="Logo" style="max-width:120px;max-height:80px;"></div>
+            <div class="login-icon"><img src="LOGO.png" alt="Logo" class="logo-img"></div>
             <div class="login-title">蒋故事记账工具</div>
             <div class="login-subtitle">请输入密码以访问</div>
             <input type="password" id="loginPassword" class="login-input" placeholder="······" maxlength="20" autofocus>
@@ -34,11 +34,11 @@
     <div id="syncStatus" class="sync-status online"><div class="sync-dot"></div><span id="syncText">已连接</span></div>
     <div class="container">
         <div class="sticky-header">
-            <div style="display:flex; justify-content:center; align-items:center; margin-bottom:8px; position:relative;">
-                <h1 style="margin:0;">蒋故事记账工具</h1>
+            <div class="header-container">
+                <h1>蒋故事记账工具</h1>
                 <button class="eye-toggle" onclick="toggleStatsMask()" id="eyeBtn" title="隐藏/显示金额">
                     <svg id="eyeIconShow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <svg id="eyeIconHide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    <svg id="eyeIconHide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                 </button>
             </div>
 
@@ -58,7 +58,7 @@
                     <div class="filter-group">
                         <label>日期范围：</label>
                         <input type="date" id="filterDateFrom" onchange="applyFilter()">
-                        <span style="color:#9ca3af;">~</span>
+                        <span class="filter-separator">~</span>
                         <input type="date" id="filterDateTo" onchange="applyFilter()">
                     </div>
                     <div class="filter-group">
@@ -84,11 +84,11 @@
                     </div>
                     <div class="filter-group">
                         <label>客户1：</label>
-                        <select id="filterCustomer1" onchange="applyFilter()" style="min-width:100px;"><option value="">全部</option></select>
+                        <select id="filterCustomer1" onchange="applyFilter()" class="customer-select"><option value="">全部</option></select>
                     </div>
                     <div class="filter-group">
                         <label>客户2：</label>
-                        <select id="filterCustomer2" onchange="applyFilter()" style="min-width:100px;"><option value="">全部</option></select>
+                        <select id="filterCustomer2" onchange="applyFilter()" class="customer-select"><option value="">全部</option></select>
                     </div>
                     <div class="filter-group" id="paidFilterGroup">
                         <label>付款状态：</label>
@@ -115,12 +115,12 @@
                     <label>日期</label>
                     <input type="date" id="inputDate">
                 </div>
-                <div class="input-group" style="position:relative;">
+                <div class="input-group input-group--relative">
                     <label>客户名称</label>
                     <input type="text" id="inputName" placeholder="客户名字" autocomplete="off">
                     <div id="customerSuggest" class="suggest-list"></div>
                 </div>
-                <div class="input-group" style="position:relative;">
+                <div class="input-group input-group--relative">
                     <label>项目</label>
                     <input type="text" id="inputProject" placeholder="维修项目" autocomplete="off" onchange="autoFillPrice()">
                     <div id="projectSuggest" class="suggest-list"></div>
@@ -153,7 +153,7 @@
                 </div>
                 <div class="input-group">
                     <label>备注</label>
-                    <input type="text" id="inputRemark" placeholder="备注信息" style="min-width:120px;">
+                    <input type="text" id="inputRemark" placeholder="备注信息" class="remark-input">
                 </div>
                 <button class="btn-add" onclick="addRecord()">➕ 添加记录</button>
             </div>
@@ -170,7 +170,7 @@
                     <tr>
                         <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
                         <th>序号</th>
-                        <th class="sortable" onclick="toggleSort('date')" style="min-width:100px;">日期<span class="sort-arrow"></span></th>
+                        <th class="sortable th-date" onclick="toggleSort('date')">日期<span class="sort-arrow"></span></th>
                         <th class="sortable" onclick="toggleSort('name')">客户名称<span class="sort-arrow"></span></th>
                         <th class="sortable" onclick="toggleSort('project')">项目<span class="sort-arrow"></span></th>
                         <th class="sortable" onclick="toggleSort('price')">单价<span class="sort-arrow"></span></th>
@@ -178,7 +178,7 @@
                         <th class="sortable" onclick="toggleSort('total')">总价<span class="sort-arrow"></span></th>
                         <th class="sortable" onclick="toggleSort('paid')">付款情况<span class="sort-arrow"></span></th>
                         <th class="sortable" onclick="toggleSort('method')">付款方式<span class="sort-arrow"></span></th>
-                        <th style="min-width:120px;">备注</th>
+                        <th class="th-remark">备注</th>
                         <th>操作</th>
                     </tr>
                 </thead>
@@ -195,7 +195,7 @@
                 <button class="tb-btn tb-backup" onclick="manualBackup()">💾 备份</button>
                 <button class="tb-btn tb-restore" onclick="restoreBackup()">📂 恢复</button>
                 <button class="tb-btn tb-clear" onclick="clearAll()">🗑️ 清空</button>
-                <input type="file" id="restoreFile" accept=".csv" style="display:none" onchange="handleRestore(event)">
+                <input type="file" id="restoreFile" accept=".csv" class="file-input-hidden" onchange="handleRestore(event)">
             </div>
             <div class="toolbar-divider"></div>
             <div class="toolbar-group">
@@ -215,7 +215,7 @@
             </div>
         </div>
         <div class="shortcuts-hint">
-            快捷键：<kbd>Ctrl+Z</kbd> 撤销删除 · <kbd>Ctrl+S</kbd> 快速备份 · <kbd>Esc</kbd> 关闭弹窗 · 点击表头可排序
+            快捷键：<kbd>Ctrl+Z</kbd> 撤销删除 · <kbd>Ctrl+S</kbd> 快速备份 · <kbd>Ctrl+N</kbd> 新增记录 · <kbd>Ctrl+F</kbd> 搜索 · <kbd>Esc</kbd> 关闭弹窗 · 点击表头可排序
         </div>
 
     </div>
@@ -224,16 +224,31 @@
     <div class="modal" id="billModal">
         <div class="modal-content" id="modalContent">
             <div class="modal-header">
-                <h2 style="margin:0;font-size:18px;color:#1e293b;">📋 客户账单</h2>
+                <h2 class="bill-title-style">📋 客户账单</h2>
                 <span class="close-btn" onclick="closeModal()">&times;</span>
             </div>
-            <div id="billContent" style="text-align:center;"></div>
+            <div id="billContent" class="bill-content-center"></div>
             <button class="btn-export-img" onclick="exportBillAsImage()">📸 导出图片</button>
-            <button class="btn-copy" onclick="copyBill()" style="margin-top:12px;">📋 复制账单文本</button>
+            <button class="btn-copy bill-copy-btn" onclick="copyBill()">📋 复制账单文本</button>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js?v=2"></script>
+    <script src="js/config.js"></script>
     <script src="js/app.js"></script>
+    <script>
+        // 注册 Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('Service Worker 注册成功:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('Service Worker 注册失败:', error);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>
