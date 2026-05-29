@@ -4107,11 +4107,12 @@
 
         // ===== 触摸手势支持 =====
 
-        // 下拉刷新
+        // 下拉刷新 - 仅在页面顶部时触发
         (function() {
             let pullStartY = 0;
             let isPulling = false;
             let pullIndicator = null;
+            let isRefreshing = false;
 
             // 创建下拉指示器
             function createPullIndicator() {
@@ -4123,16 +4124,21 @@
                 document.body.appendChild(pullIndicator);
             }
 
-            document.addEventListener('touchstart', function(e) {
-                if (window.scrollY === 0) {
+            // 只在表格区域顶部监听下拉
+            const tableWrap = document.querySelector('.table-wrap');
+            if (!tableWrap) return;
+
+            tableWrap.addEventListener('touchstart', function(e) {
+                // 只在滚动位置为0时触发
+                if (tableWrap.scrollTop === 0) {
                     pullStartY = e.touches[0].clientY;
                     isPulling = true;
                     createPullIndicator();
                 }
             }, { passive: true });
 
-            document.addEventListener('touchmove', function(e) {
-                if (!isPulling || !pullIndicator) return;
+            tableWrap.addEventListener('touchmove', function(e) {
+                if (!isPulling || !pullIndicator || isRefreshing) return;
                 const pullY = e.touches[0].clientY;
                 const pullDistance = pullY - pullStartY;
 
@@ -4146,27 +4152,32 @@
                 }
             }, { passive: true });
 
-            document.addEventListener('touchend', function(e) {
-                if (!isPulling || !pullIndicator) return;
+            tableWrap.addEventListener('touchend', function(e) {
+                if (!isPulling || !pullIndicator || isRefreshing) return;
                 const pullEndY = e.changedTouches[0].clientY;
                 const pullDistance = pullEndY - pullStartY;
 
                 if (pullDistance > 80) {
                     // 触发刷新
+                    isRefreshing = true;
                     pullIndicator.querySelector('span').textContent = '刷新中...';
                     pullIndicator.style.top = '10px';
 
-                    // 模拟刷新
-                    setTimeout(function() {
-                        loadFromCloud().then(function() {
+                    // 执行刷新
+                    loadFromCloud().then(function(success) {
+                        if (success) {
                             batchRender();
-                            pullIndicator.style.top = '-60px';
                             showToast('数据已刷新', 'success');
-                        }).catch(function() {
-                            pullIndicator.style.top = '-60px';
+                        } else {
                             showToast('刷新失败，请检查网络', 'warning');
-                        });
-                    }, 500);
+                        }
+                        pullIndicator.style.top = '-60px';
+                        isRefreshing = false;
+                    }).catch(function() {
+                        pullIndicator.style.top = '-60px';
+                        showToast('刷新失败，请检查网络', 'warning');
+                        isRefreshing = false;
+                    });
                 } else {
                     pullIndicator.style.top = '-60px';
                 }
