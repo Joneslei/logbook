@@ -4107,68 +4107,6 @@
 
         // ===== 触摸手势支持 =====
 
-        // 左滑删除
-        (function() {
-            let touchStartX = 0;
-            let touchStartY = 0;
-            let currentRow = null;
-            let swipeThreshold = 80;
-
-            document.addEventListener('touchstart', function(e) {
-                const row = e.target.closest('tr[data-row-id]');
-                if (row) {
-                    touchStartX = e.touches[0].clientX;
-                    touchStartY = e.touches[0].clientY;
-                    currentRow = row;
-                }
-            }, { passive: true });
-
-            document.addEventListener('touchmove', function(e) {
-                if (!currentRow) return;
-                const touchX = e.touches[0].clientX;
-                const touchY = e.touches[0].clientY;
-                const deltaX = touchX - touchStartX;
-                const deltaY = touchY - touchStartY;
-
-                // 只处理水平滑动
-                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
-                    e.preventDefault();
-                    if (deltaX < -swipeThreshold) {
-                        // 左滑显示删除按钮
-                        currentRow.style.transform = 'translateX(-80px)';
-                        currentRow.style.transition = 'transform 0.2s ease';
-                    } else {
-                        currentRow.style.transform = 'translateX(0)';
-                    }
-                }
-            }, { passive: false });
-
-            document.addEventListener('touchend', function(e) {
-                if (!currentRow) return;
-                const touchEndX = e.changedTouches[0].clientX;
-                const deltaX = touchEndX - touchStartX;
-
-                if (deltaX < -swipeThreshold) {
-                    // 保持左滑状态，显示删除按钮
-                    currentRow.style.transform = 'translateX(-80px)';
-                } else {
-                    // 恢复原位
-                    currentRow.style.transform = 'translateX(0)';
-                }
-
-                currentRow = null;
-            }, { passive: true });
-
-            // 点击其他区域恢复
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('tr[data-row-id]')) {
-                    document.querySelectorAll('tr[data-row-id]').forEach(row => {
-                        row.style.transform = 'translateX(0)';
-                    });
-                }
-            });
-        })();
-
         // 下拉刷新
         (function() {
             let pullStartY = 0;
