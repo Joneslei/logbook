@@ -4013,40 +4013,45 @@
         }
 
         function exportToExcel() {
-            if (typeof XLSX === 'undefined') {
-                showToast('Excel 导出功能加载失败，请刷新页面重试', 'error');
-                return;
+            if (typeof XLSX !== 'undefined') {
+                const filtered = sortRecords(getFilteredRecords());
+                let runningQty = 0, runningTotal = 0;
+                const data = filtered.map(r => {
+                    runningQty += r.qty;
+                    runningTotal += r.total;
+                    return {
+                        '序号': r.seq, '日期': r.date,
+                        '客户名称': r.name, '项目': r.project,
+                        '单价': r.price, '数量': r.qty, '总价': r.total,
+                        '付款情况': r.paid || '未付',
+                        '付款方式': r.method || '',
+                        '备注': r.remark || '',
+                        '累计数量': runningQty, '累计金额': runningTotal
+                    };
+                });
+                const ws = XLSX.utils.json_to_sheet(data);
+                ws['!cols'] = [{ wch: 6 },{ wch: 12 },{ wch: 12 },{ wch: 25 },{ wch: 8 },{ wch: 6 },{ wch: 10 },{ wch: 8 },{ wch: 8 },{ wch: 15 },{ wch: 10 },{ wch: 12 }];
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, '记账数据');
+                XLSX.writeFile(wb, '记账本_' + new Date().toISOString().split('T')[0] + '.xlsx');
+                showToast('导出成功！', 'success');
+            } else {
+                const filtered = sortRecords(getFilteredRecords());
+                let csv = '序号,日期,客户名称,项目,单价,数量,总价,付款情况,付款方式,备注,总数量,总计\n';
+                let runningQty = 0, runningTotal = 0;
+                filtered.forEach(r => {
+                    runningQty += r.qty; runningTotal += r.total;
+                    const row = [r.seq, r.date, r.name, r.project, r.price, r.qty, r.total, r.paid || '', r.method || '', r.remark || '', runningQty, runningTotal]
+                        .map(v => String(v).includes(',') ? '"' + v + '"' : v).join(',');
+                    csv += row + '\n';
+                });
+                const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = '记账本_' + new Date().toISOString().split('T')[0] + '.csv';
+                link.click();
+                showToast('CSV 导出成功！', 'success');
             }
-            const filtered = sortRecords(getFilteredRecords());
-            let runningQty = 0, runningTotal = 0;
-            const data = filtered.map(r => {
-                runningQty += r.qty;
-                runningTotal += r.total;
-                return {
-                    '序号': r.seq,
-                    '日期': r.date,
-                    '客户名称': r.name,
-                    '项目': r.project,
-                    '单价': r.price,
-                    '数量': r.qty,
-                    '总价': r.total,
-                    '付款情况': r.paid || '未付',
-                    '付款方式': r.method || '',
-                    '备注': r.remark || '',
-                    '累计数量': runningQty,
-                    '累计金额': runningTotal
-                };
-            });
-            const ws = XLSX.utils.json_to_sheet(data);
-            ws['!cols'] = [
-                { wch: 6 }, { wch: 12 }, { wch: 12 }, { wch: 25 },
-                { wch: 8 }, { wch: 6 }, { wch: 10 }, { wch: 8 },
-                { wch: 8 }, { wch: 15 }, { wch: 10 }, { wch: 12 }
-            ];
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, '记账数据');
-            XLSX.writeFile(wb, '记账本_' + new Date().toISOString().split('T')[0] + '.xlsx');
-            showToast('导出成功！', 'success');
         }
 
         // ===== 统计图表 =====
