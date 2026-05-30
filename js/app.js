@@ -1186,10 +1186,10 @@
                 .catch(function() { showToast('复制失败，请手动复制', 'error'); });
         }
 
-        function exportBillAsImage() {
+        function exportBillAsImage(e) {
             const billEl = document.getElementById('billContent').querySelector('.bill-card');
             if (!billEl) { showToast('没有可导出的账单！', 'warning'); return; }
-            const btn = event.target;
+            const btn = e ? e.target : document.querySelector('.btn-export-img');
             btn.textContent = '⏳ 生成中...';
             btn.disabled = true;
 
@@ -1421,6 +1421,9 @@
 
         function renderCharts() {
             const filtered = getFilteredRecords();
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#d1d5db' : '#374151';
+            const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
 
             // 1. 月度收支趋势图
             const monthMap = {};
@@ -1446,8 +1449,8 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { title: { display: true, text: '月度收支趋势' } },
-                    scales: { x: { stacked: true }, y: { stacked: true } }
+                    plugins: { title: { display: true, text: '月度收支趋势', color: textColor }, legend: { labels: { color: textColor } } },
+                    scales: { x: { stacked: true, ticks: { color: textColor }, grid: { color: gridColor } }, y: { stacked: true, ticks: { color: textColor }, grid: { color: gridColor } } }
                 }
             });
 
@@ -1464,7 +1467,7 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { title: { display: true, text: '付款状态' } }
+                    plugins: { title: { display: true, text: '付款状态', color: textColor }, legend: { labels: { color: textColor } } }
                 }
             });
 
@@ -1486,7 +1489,8 @@
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     indexAxis: 'y',
-                    plugins: { title: { display: true, text: '客户消费排名（Top 10）' } }
+                    plugins: { title: { display: true, text: '客户消费排名（Top 10）', color: textColor }, legend: { labels: { color: textColor } } },
+                    scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } }
                 }
             });
         }
