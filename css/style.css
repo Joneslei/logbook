@@ -65,6 +65,7 @@
             opacity: 0.4; transition: opacity .15s; background: none; border: none; padding: 4px; border-radius: 6px;
         }
         .eye-toggle:hover { opacity: 1; background: var(--color-border-light); }
+        .theme-toggle { font-size: 16px; right: 36px; top: 6px; }
 
         /* 筛选区 */
         .filter-area {
@@ -419,3 +420,43 @@
         .hidden { display: none !important; }
 
         /* 暗色模式支持 */
+        [data-theme="dark"] {
+            --color-primary: #3b82f6;
+            --color-primary-dark: #2563eb;
+            --color-primary-light: #1e293b;
+            --color-success: #10b981;
+            --color-success-dark: #059669;
+            --color-danger: #ef4444;
+            --color-warning: #f59e0b;
+            --color-text: #e2e8f0;
+            --color-text-secondary: #94a3b8;
+            --color-text-light: #64748b;
+            --color-border: #334155;
+            --color-border-light: #1e293b;
+            --color-bg: #0f172a;
+            --color-bg-card: #1e293b;
+            --color-bg-hover: #263548;
+            --color-bg-highlight: #172554;
+        }
+
+        [data-theme="dark"] .login-overlay { background: var(--color-bg); }
+        [data-theme="dark"] .login-box { background: var(--color-bg-card); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+        [data-theme="dark"] .loading-overlay { background: var(--color-bg); }
+        [data-theme="dark"] .suggest-list { background: var(--color-bg-card); border-color: var(--color-border); }
+        [data-theme="dark"] .suggest-item:hover { background: var(--color-bg-hover); }
+        [data-theme="dark"] .bill-card { border-color: var(--color-border); }
+        [data-theme="dark"] .bill-header { background: var(--color-text); }
+        [data-theme="dark"] .toast { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        [data-theme="dark"] .modal-content { box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+        [data-theme="dark"] table { border-color: var(--color-border-light); }
+        [data-theme="dark"] .delete-btn { background: var(--color-bg-card); }
+        [data-theme="dark"] .inline-select { background: var(--color-bg-card); color: var(--color-text); }
+
+        /* 无障碍：减少动画 */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }

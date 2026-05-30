@@ -48,6 +48,9 @@
             document.getElementById('loginOverlay').style.display = 'none';
         }
 
+        // 尽早初始化主题，避免闪烁
+        initTheme();
+
         // 连接状态管理
         let isOnline = false;
         let _cloudFailCount = 0;
@@ -98,6 +101,30 @@
         function debounce(fn, ms) {
             let timer;
             return function(...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), ms); };
+        }
+
+        // ===== 暗色模式 =====
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            updateThemeButton(next);
+        }
+
+        function updateThemeButton(theme) {
+            const btn = document.getElementById('themeBtn');
+            if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        function initTheme() {
+            // 优先读取用户偏好，其次跟随系统
+            let theme = localStorage.getItem('theme');
+            if (!theme) {
+                theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeButton(theme);
         }
 
         // ===== 金额隐藏/显示 =====
