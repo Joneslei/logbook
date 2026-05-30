@@ -153,6 +153,7 @@
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
             updateThemeButton(next);
+            updateThemeColor(next);
         }
 
         function updateThemeButton(theme) {
@@ -162,14 +163,19 @@
             if (sun) sun.style.display = theme === 'dark' ? 'block' : 'none';
         }
 
+        function updateThemeColor(theme) {
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', theme === 'dark' ? '#0f172a' : '#1e40af');
+        }
+
         function initTheme() {
-            // 优先读取用户偏好，其次跟随系统
             let theme = localStorage.getItem('theme');
             if (!theme) {
                 theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             }
             document.documentElement.setAttribute('data-theme', theme);
             updateThemeButton(theme);
+            updateThemeColor(theme);
         }
 
         // ===== 金额隐藏/显示 =====

@@ -455,6 +455,7 @@
         [data-theme="dark"] table { border-color: var(--color-border-light); }
         [data-theme="dark"] .delete-btn { background: var(--color-bg-card); }
         [data-theme="dark"] .inline-select { background: var(--color-bg-card); color: var(--color-text); }
+        [data-theme="dark"] .eye-toggle:hover { background: var(--color-bg-hover); }
 
         /* 无障碍：减少动画 */
         @media (prefers-reduced-motion: reduce) {
