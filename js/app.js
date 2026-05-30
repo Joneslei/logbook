@@ -165,7 +165,7 @@
 
         function updateThemeColor(theme) {
             const meta = document.querySelector('meta[name="theme-color"]');
-            if (meta) meta.setAttribute('content', theme === 'dark' ? '#0f172a' : '#1e40af');
+            if (meta) meta.setAttribute('content', theme === 'dark' ? '#161b22' : '#1e40af');
         }
 
         function initTheme() {

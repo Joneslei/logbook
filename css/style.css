@@ -425,22 +425,22 @@
 
         /* 暗色模式支持 */
         [data-theme="dark"] {
-            --color-primary: #3b82f6;
-            --color-primary-dark: #2563eb;
-            --color-primary-light: #1e293b;
-            --color-success: #10b981;
-            --color-success-dark: #059669;
-            --color-danger: #ef4444;
-            --color-warning: #f59e0b;
-            --color-text: #e2e8f0;
-            --color-text-secondary: #94a3b8;
-            --color-text-light: #64748b;
-            --color-border: #334155;
-            --color-border-light: #1e293b;
-            --color-bg: #0f172a;
-            --color-bg-card: #1e293b;
-            --color-bg-hover: #263548;
-            --color-bg-highlight: #172554;
+            --color-primary: #60a5fa;
+            --color-primary-dark: #3b82f6;
+            --color-primary-light: #1a2332;
+            --color-success: #34d399;
+            --color-success-dark: #10b981;
+            --color-danger: #f87171;
+            --color-warning: #fbbf24;
+            --color-text: #d1d5db;
+            --color-text-secondary: #8b929a;
+            --color-text-light: #5f6672;
+            --color-border: #2d333b;
+            --color-border-light: #21262d;
+            --color-bg: #161b22;
+            --color-bg-card: #1c2128;
+            --color-bg-hover: #22272e;
+            --color-bg-highlight: #1a2332;
         }
 
         [data-theme="dark"] .login-overlay { background: var(--color-bg); }
