@@ -3884,7 +3884,10 @@
             });
         }
 
-        window.onclick = e => { if (e.target === document.getElementById('billModal')) closeModal(); };
+        window.onclick = e => {
+            if (e.target === document.getElementById('billModal')) closeModal();
+            if (e.target === document.getElementById('chartModal')) closeChartModal();
+        };
 
         // 拖动弹窗
         let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
@@ -4011,19 +4014,121 @@
 
         function exportToExcel() {
             const filtered = sortRecords(getFilteredRecords());
-            let csv = '序号,日期,客户名称,项目,单价,数量,总价,付款情况,付款方式,备注,总数量,总计\n';
             let runningQty = 0, runningTotal = 0;
-            filtered.forEach(r => {
-                runningQty += r.qty; runningTotal += r.total;
-                const row = [r.seq, r.date, r.name, r.project, r.price, r.qty, r.total, r.paid || '', r.method || '', r.remark || '', runningQty, runningTotal]
-                    .map(v => String(v).includes(',') ? '"' + v + '"' : v).join(',');
-                csv += row + '\n';
+            const data = filtered.map(r => {
+                runningQty += r.qty;
+                runningTotal += r.total;
+                return {
+                    '序号': r.seq,
+                    '日期': r.date,
+                    '客户名称': r.name,
+                    '项目': r.project,
+                    '单价': r.price,
+                    '数量': r.qty,
+                    '总价': r.total,
+                    '付款情况': r.paid || '未付',
+                    '付款方式': r.method || '',
+                    '备注': r.remark || '',
+                    '累计数量': runningQty,
+                    '累计金额': runningTotal
+                };
             });
-            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = '记账本_' + new Date().toISOString().split('T')[0] + '.csv';
-            link.click();
+            const ws = XLSX.utils.json_to_sheet(data);
+            ws['!cols'] = [
+                { wch: 6 }, { wch: 12 }, { wch: 12 }, { wch: 25 },
+                { wch: 8 }, { wch: 6 }, { wch: 10 }, { wch: 8 },
+                { wch: 8 }, { wch: 15 }, { wch: 10 }, { wch: 12 }
+            ];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '记账数据');
+            XLSX.writeFile(wb, '记账本_' + new Date().toISOString().split('T')[0] + '.xlsx');
+            showToast('导出成功！', 'success');
+        }
+
+        // ===== 统计图表 =====
+        let monthlyChartInstance = null;
+        let paidChartInstance = null;
+        let customerChartInstance = null;
+
+        function showChart() {
+            document.getElementById('chartModal').style.display = 'block';
+            renderCharts();
+        }
+
+        function closeChartModal() {
+            document.getElementById('chartModal').style.display = 'none';
+        }
+
+        function renderCharts() {
+            const filtered = getFilteredRecords();
+
+            // 1. 月度收支趋势图
+            const monthMap = {};
+            filtered.forEach(r => {
+                const month = r.date.substring(0, 7);
+                if (!monthMap[month]) monthMap[month] = { paid: 0, unpaid: 0 };
+                if (r.paid) monthMap[month].paid += r.total;
+                else monthMap[month].unpaid += r.total;
+            });
+            const months = Object.keys(monthMap).sort();
+            const paidData = months.map(m => monthMap[m].paid);
+            const unpaidData = months.map(m => monthMap[m].unpaid);
+
+            if (monthlyChartInstance) monthlyChartInstance.destroy();
+            monthlyChartInstance = new Chart(document.getElementById('monthlyChart'), {
+                type: 'bar',
+                data: {
+                    labels: months.map(m => m.substring(5) + '月'),
+                    datasets: [
+                        { label: '已结账', data: paidData, backgroundColor: 'rgba(5,150,105,0.7)' },
+                        { label: '未结账', data: unpaidData, backgroundColor: 'rgba(220,38,38,0.7)' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: '月度收支趋势' } },
+                    scales: { x: { stacked: true }, y: { stacked: true } }
+                }
+            });
+
+            // 2. 付款状态饼图
+            const paidTotal = filtered.filter(r => r.paid).reduce((s, r) => s + r.total, 0);
+            const unpaidTotal = filtered.filter(r => !r.paid).reduce((s, r) => s + r.total, 0);
+
+            if (paidChartInstance) paidChartInstance.destroy();
+            paidChartInstance = new Chart(document.getElementById('paidChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['已结账', '未结账'],
+                    datasets: [{ data: [paidTotal, unpaidTotal], backgroundColor: ['rgba(5,150,105,0.8)', 'rgba(220,38,38,0.8)'] }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: '付款状态' } }
+                }
+            });
+
+            // 3. 客户排名柱状图
+            const customerMap = {};
+            filtered.forEach(r => {
+                if (!customerMap[r.name]) customerMap[r.name] = 0;
+                customerMap[r.name] += r.total;
+            });
+            const sorted = Object.entries(customerMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+            if (customerChartInstance) customerChartInstance.destroy();
+            customerChartInstance = new Chart(document.getElementById('customerChart'), {
+                type: 'bar',
+                data: {
+                    labels: sorted.map(s => s[0]),
+                    datasets: [{ label: '消费金额', data: sorted.map(s => s[1]), backgroundColor: 'rgba(37,99,235,0.7)' }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { title: { display: true, text: '客户消费排名（Top 10）' } }
+                }
+            });
         }
 
         // Enter键添加记录
@@ -4043,7 +4148,7 @@
             if (e.ctrlKey && e.key === 's') { e.preventDefault(); manualBackup(); showToast('正在下载备份...', 'info'); }
 
             // Esc - 关闭弹窗
-            if (e.key === 'Escape') closeModal();
+            if (e.key === 'Escape') { closeModal(); closeChartModal(); }
 
             // Ctrl+N - 新增记录（聚焦到输入区）
             if (e.ctrlKey && e.key === 'n' && !isInput) {

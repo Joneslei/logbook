@@ -168,6 +168,8 @@
         .tb-export:hover { background: var(--color-success-dark); border-color: var(--color-success-dark); }
         .tb-backup { background: var(--color-primary); color: var(--color-bg-card); border-color: var(--color-primary); }
         .tb-backup:hover { background: var(--color-primary-dark); border-color: var(--color-primary-dark); }
+        .tb-chart { background: #7c3aed; color: var(--color-bg-card); border-color: #7c3aed; }
+        .tb-chart:hover { background: #6d28d9; border-color: #6d28d9; }
         .tb-restore { background: var(--color-primary); color: var(--color-bg-card); border-color: var(--color-primary); }
         .tb-restore:hover { background: var(--color-primary-dark); border-color: var(--color-primary-dark); }
         .tb-clear:hover { background: var(--color-bg-hover); color: var(--color-danger); border-color: var(--color-danger); }
