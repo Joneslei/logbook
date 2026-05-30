@@ -3574,7 +3574,7 @@
                     '</td>' +
                     '<td style="position:relative;" onmouseenter="showEdit(this)" onmouseleave="hideEdit(this)" onclick="mobileEditCell(this)">' +
                         '<span class="method-display">' + esc(r.method) + '</span>' +
-                        '<select class="inline-select method-edit" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:90%;" onchange="if(this.value){var payRow=this.closest(\'tr\').querySelector(\'.pay-edit\');if(payRow)payRow.value=\'已付\';}markRowDirty(' + r.id + ')" onclick="event.stopPropagation()">' +
+                        '<select class="inline-select method-edit" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:90%;" onchange="var payRow=this.closest(\'tr\').querySelector(\'.pay-edit\');if(payRow)payRow.value=this.value?\'已付\':\'\';markRowDirty(' + r.id + ')" onclick="event.stopPropagation()">' +
                             '<option value="" ' + (r.method ? '' : 'selected') + '></option>' +
                             '<option value="微信" ' + (r.method == '微信' ? 'selected' : '') + '>微信</option>' +
                             '<option value="支付宝" ' + (r.method == '支付宝' ? 'selected' : '') + '>支付宝</option>' +
