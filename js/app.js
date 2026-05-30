@@ -4013,6 +4013,10 @@
         }
 
         function exportToExcel() {
+            if (typeof XLSX === 'undefined') {
+                showToast('Excel 导出功能加载失败，请刷新页面重试', 'error');
+                return;
+            }
             const filtered = sortRecords(getFilteredRecords());
             let runningQty = 0, runningTotal = 0;
             const data = filtered.map(r => {
@@ -4051,6 +4055,10 @@
         let customerChartInstance = null;
 
         function showChart() {
+            if (typeof Chart === 'undefined') {
+                showToast('图表功能加载失败，请刷新页面重试', 'error');
+                return;
+            }
             document.getElementById('chartModal').style.display = 'block';
             renderCharts();
         }
