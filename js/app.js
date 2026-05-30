@@ -3889,21 +3889,33 @@
             if (e.target === document.getElementById('chartModal')) closeChartModal();
         };
 
-        // 拖动弹窗
-        let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
-        const modalContent = document.getElementById('modalContent');
-        modalContent.addEventListener('mousedown', e => {
-            if (['INPUT','SELECT','BUTTON'].includes(e.target.tagName)) return;
-            initialX = e.clientX - xOffset; initialY = e.clientY - yOffset;
-            if (e.target.closest('.modal-content')) isDragging = true;
-        });
-        document.addEventListener('mouseup', () => { initialX = currentX; initialY = currentY; isDragging = false; });
+        // 拖动弹窗（支持多个弹窗）
+        let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0, activeModal = null;
+
+        function setupModalDrag(modalId) {
+            const mc = document.getElementById(modalId);
+            if (!mc) return;
+            mc.addEventListener('mousedown', e => {
+                if (['INPUT','SELECT','BUTTON'].includes(e.target.tagName)) return;
+                if (e.target.closest('.modal-content')) {
+                    isDragging = true;
+                    activeModal = mc;
+                    initialX = e.clientX - xOffset;
+                    initialY = e.clientY - yOffset;
+                }
+            });
+        }
+
+        setupModalDrag('modalContent');
+        setupModalDrag('chartModal');
+
+        document.addEventListener('mouseup', () => { initialX = currentX; initialY = currentY; isDragging = false; activeModal = null; });
         document.addEventListener('mousemove', e => {
-            if (!isDragging) return;
+            if (!isDragging || !activeModal) return;
             e.preventDefault();
             currentX = e.clientX - initialX; currentY = e.clientY - initialY;
             xOffset = currentX; yOffset = currentY;
-            modalContent.style.transform = 'translate(calc(-50% + ' + currentX + 'px), ' + currentY + 'px)';
+            activeModal.style.transform = 'translate(calc(-50% + ' + currentX + 'px), ' + currentY + 'px)';
         });
 
         // ===== 离开页面提醒 =====
