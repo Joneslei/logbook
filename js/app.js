@@ -417,12 +417,13 @@
         // ===== 数据操作 =====
 
         // FIX: 添加输入验证
-        function validateInput(name, project, price, qty) {
+        function validateInput(date, name, project, price, qty) {
             const errors = [];
+            if (!date) errors.push('日期');
             if (!name) errors.push('客户名称');
             if (!project) errors.push('项目');
-            if (isNaN(price)) errors.push('请填写单价');
-            if (isNaN(qty) || qty < 1) errors.push('数量（需≥1）');
+            if (isNaN(price) || price < 0) errors.push('单价（需≥0）');
+            if (isNaN(qty) || qty < 1 || qty > 9999) errors.push('数量（需1~9999）');
             return errors;
         }
 
@@ -451,14 +452,15 @@
             // 选了付款方式就自动标记为已付
             if (method) paid = '已付';
 
-            const errors = validateInput(name, project, price, qty);
+            const errors = validateInput(date, name, project, price, qty);
             if (errors.length > 0) {
                 showToast('请填写：' + errors.join('、'), 'warning');
                 const invalidIds = [];
+                if (!date) invalidIds.push('inputDate');
                 if (!name) invalidIds.push('inputName');
                 if (!project) invalidIds.push('inputProject');
-                if (isNaN(price)) invalidIds.push('inputPrice');
-                if (isNaN(qty) || qty < 1) invalidIds.push('inputQty');
+                if (isNaN(price) || price < 0) invalidIds.push('inputPrice');
+                if (isNaN(qty) || qty < 1 || qty > 9999) invalidIds.push('inputQty');
                 markInvalid(invalidIds);
                 return;
             }
@@ -1066,8 +1068,29 @@
             const customers = [c1, c2].filter(v => v);
             if (!customers.length) { showToast('请先选择一个客户！', 'warning'); return; }
 
-            const unpaidRecords = records.filter(r => customers.includes(r.name) && !r.paid).sort((a, b) => a.date.localeCompare(b.date));
-            if (!unpaidRecords.length) { showToast('该客户没有未结账的记录！', 'info'); return; }
+            // 根据当前筛选状态决定账单类型
+            const activePaidBtn = document.querySelector('.paid-filter-btn.active');
+            const paidFilter = activePaidBtn ? activePaidBtn.dataset.paid : '';
+
+            let billRecords;
+            let billTypeLabel;
+            if (paidFilter === 'paid') {
+                billRecords = records.filter(r => customers.includes(r.name) && r.paid);
+                billTypeLabel = '已结账对账单';
+            } else if (paidFilter === 'unpaid') {
+                billRecords = records.filter(r => customers.includes(r.name) && !r.paid);
+                billTypeLabel = '未结账结算单';
+            } else {
+                // 全部模式：弹出选择
+                const choice = prompt('请选择账单类型：\n1 - 未结账结算单\n2 - 已结账对账单\n3 - 全部记录', '1');
+                if (!choice) return;
+                if (choice === '1') { billRecords = records.filter(r => customers.includes(r.name) && !r.paid); billTypeLabel = '未结账结算单'; }
+                else if (choice === '2') { billRecords = records.filter(r => customers.includes(r.name) && r.paid); billTypeLabel = '已结账对账单'; }
+                else { billRecords = records.filter(r => customers.includes(r.name)); billTypeLabel = '全部记录对账单'; }
+            }
+
+            billRecords = billRecords.sort((a, b) => a.date.localeCompare(b.date));
+            if (!billRecords.length) { showToast('该客户没有符合条件的记录！', 'info'); return; }
 
             const today = new Date().toLocaleDateString('zh-CN');
             let html = '<div class="bill-card" style="position:relative;overflow:hidden;">';
@@ -1081,7 +1104,7 @@
                 }
             }
             html += '<div style="position:relative;z-index:1;">';
-            html += '<div class="bill-title">📋 客户结算单</div>';
+            html += '<div class="bill-title">📋 ' + esc(billTypeLabel) + '</div>';
             html += '<div class="bill-info">' +
                 '<div><span class="bill-info-label">客户：</span><span class="bill-info-value">' + esc(customers.join('、')) + '</span></div>' +
                 '<div><span class="bill-info-label">账单发送日期：</span><span class="bill-info-value">' + esc(today) + '</span></div>' +
@@ -1098,7 +1121,7 @@
             '</div>';
 
             let total = 0;
-            unpaidRecords.forEach((r, i) => {
+            billRecords.forEach((r, i) => {
                 total += r.total;
                 html += '<div class="bill-item">' +
                     '<span class="bill-item-no">' + (i + 1) + '</span>' +
