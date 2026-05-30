@@ -150,10 +150,8 @@
         function toggleTheme() {
             const current = document.documentElement.getAttribute('data-theme');
             const next = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            updateThemeButton(next);
-            updateThemeColor(next);
+            applyTheme(next);
         }
 
         function updateThemeButton(theme) {
@@ -170,14 +168,24 @@
             if (meta) meta.setAttribute('content', theme === 'dark' ? '#161b22' : '#1e40af');
         }
 
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeButton(theme);
+            updateThemeColor(theme);
+        }
+
         function initTheme() {
             let theme = localStorage.getItem('theme');
             if (!theme) {
                 theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                // 监听系统主题变化（仅在用户未手动设置时生效）
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                    if (!localStorage.getItem('theme')) {
+                        applyTheme(e.matches ? 'dark' : 'light');
+                    }
+                });
             }
-            document.documentElement.setAttribute('data-theme', theme);
-            updateThemeButton(theme);
-            updateThemeColor(theme);
+            applyTheme(theme);
         }
 
         // ===== 金额隐藏/显示 =====
