@@ -61,10 +61,13 @@
         .stat-value.masked { font-size: 15px; letter-spacing: 3px; color: var(--color-border); }
         .stat-box.highlight .stat-value { color: var(--color-primary); }
         .eye-toggle {
-            position: absolute; top: 6px; right: 8px; cursor: pointer; font-size: 15px;
+            cursor: pointer; font-size: 15px;
             opacity: 0.4; transition: opacity .15s; background: none; border: none; padding: 4px; border-radius: 6px;
         }
         .eye-toggle:hover { opacity: 1; background: var(--color-border-light); }
+        .header-btns {
+            position: absolute; top: 6px; right: 8px; display: flex; gap: 2px; align-items: center;
+        }
 
         /* 筛选区 */
         .filter-area {
@@ -264,7 +267,8 @@
             .stat-label { font-size: 9px; }
             .stat-value { font-size: 16px; }
             .stat-value.masked { font-size: 11px; letter-spacing: 2px; }
-            .eye-toggle { font-size: 18px; position: absolute !important; top: 0; right: 0; padding: 6px 8px; }
+            .eye-toggle { font-size: 18px; padding: 6px 8px; }
+            .header-btns { top: 0; right: 0; }
 
             .filter-area { padding: 0; margin-bottom: 10px; background: transparent; border: none; }
             .filter-toggle { display: flex !important; padding: 11px 14px; background: var(--color-bg-card); border: 1px solid var(--color-border-light); border-radius: 10px; font-size: 14px; }

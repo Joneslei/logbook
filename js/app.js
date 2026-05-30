@@ -1098,15 +1098,18 @@
             const activePaidBtn = document.querySelector('.paid-filter-btn.active');
             const paidFilter = activePaidBtn ? activePaidBtn.dataset.paid : '';
 
-            // 默认导出未结账记录；筛选为"已结账"时导出已付记录
+            // 跟随筛选状态：未结账→未付 / 已结账→已付 / 全部→所有记录
             let billRecords;
             let billTypeLabel;
             if (paidFilter === 'paid') {
                 billRecords = records.filter(r => customers.includes(r.name) && r.paid);
                 billTypeLabel = '已结账对账单';
-            } else {
+            } else if (paidFilter === 'unpaid') {
                 billRecords = records.filter(r => customers.includes(r.name) && !r.paid);
                 billTypeLabel = '未结账结算单';
+            } else {
+                billRecords = records.filter(r => customers.includes(r.name));
+                billTypeLabel = '客户对账单';
             }
 
             billRecords = billRecords.sort((a, b) => a.date.localeCompare(b.date));
