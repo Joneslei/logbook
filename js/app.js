@@ -3890,32 +3890,32 @@
         };
 
         // 拖动弹窗（支持多个弹窗）
-        let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0, activeModal = null;
+        let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0, activeContent = null;
 
         function setupModalDrag(modalId) {
             const mc = document.getElementById(modalId);
             if (!mc) return;
-            mc.addEventListener('mousedown', e => {
+            const content = mc.querySelector('.modal-content');
+            if (!content) return;
+            content.addEventListener('mousedown', e => {
                 if (['INPUT','SELECT','BUTTON'].includes(e.target.tagName)) return;
-                if (e.target.closest('.modal-content')) {
-                    isDragging = true;
-                    activeModal = mc;
-                    initialX = e.clientX - xOffset;
-                    initialY = e.clientY - yOffset;
-                }
+                isDragging = true;
+                activeContent = content;
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
             });
         }
 
-        setupModalDrag('modalContent');
+        setupModalDrag('billModal');
         setupModalDrag('chartModal');
 
-        document.addEventListener('mouseup', () => { initialX = currentX; initialY = currentY; isDragging = false; activeModal = null; });
+        document.addEventListener('mouseup', () => { initialX = currentX; initialY = currentY; isDragging = false; activeContent = null; });
         document.addEventListener('mousemove', e => {
-            if (!isDragging || !activeModal) return;
+            if (!isDragging || !activeContent) return;
             e.preventDefault();
             currentX = e.clientX - initialX; currentY = e.clientY - initialY;
             xOffset = currentX; yOffset = currentY;
-            activeModal.style.transform = 'translate(calc(-50% + ' + currentX + 'px), ' + currentY + 'px)';
+            activeContent.style.transform = 'translate(calc(-50% + ' + currentX + 'px), ' + currentY + 'px)';
         });
 
         // ===== 离开页面提醒 =====
