@@ -1591,7 +1591,10 @@
                 pullIndicator = document.createElement('div');
                 pullIndicator.className = 'pull-refresh-indicator';
                 pullIndicator.innerHTML = '<div class="pull-refresh-spinner"></div><span>下拉刷新</span>';
-                pullIndicator.style.cssText = 'position:fixed;top:-60px;left:50%;transform:translateX(-50%);background:#fff;padding:12px 24px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;align-items:center;gap:8px;transition:top 0.3s ease;z-index:1000;';
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const indicatorBg = isDark ? '#1c2128' : '#fff';
+                const indicatorColor = isDark ? '#d1d5db' : '#333';
+                pullIndicator.style.cssText = 'position:fixed;top:-60px;left:50%;transform:translateX(-50%);background:' + indicatorBg + ';color:' + indicatorColor + ';padding:12px 24px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;gap:8px;transition:top 0.3s ease;z-index:1000;';
                 document.body.appendChild(pullIndicator);
             }
 
