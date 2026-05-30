@@ -85,7 +85,11 @@
         }
 
         // ===== 工具函数 =====
-        function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s || '';
+            return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
         let _saveTimer = null;
         function scheduleSave() { clearTimeout(_saveTimer); _saveTimer = setTimeout(saveData, 300); }
         function batchRender() { renderTable(); updateStats(); updateSelectedStats(); }
