@@ -312,7 +312,8 @@
             th { padding: 10px 6px; font-size: 10px; }
             th:first-child, td:first-child { display: table-cell; width: 28px; min-width: 28px; padding: 8px 2px; }
             th:nth-child(2), td:nth-child(2) { display: none; }
-            th:nth-child(10), td:nth-child(10) { display: none; }
+            th:nth-child(8), td:nth-child(8) { display: none; }
+            th:nth-child(9), td:nth-child(9) { display: none; }
             th:nth-child(11), td:nth-child(11) { display: none; }
             td { padding: 10px 6px; font-size: 12px; }
             td:first-child input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--color-primary); }
