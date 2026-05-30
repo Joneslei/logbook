@@ -161,6 +161,8 @@
             const sun = document.getElementById('themeIconSun');
             if (moon) moon.style.display = theme === 'dark' ? 'none' : 'block';
             if (sun) sun.style.display = theme === 'dark' ? 'block' : 'none';
+            const logo = document.getElementById('loginLogo');
+            if (logo) logo.src = theme === 'dark' ? 'LOGO_B.png' : 'LOGO.png';
         }
 
         function updateThemeColor(theme) {
