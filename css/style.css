@@ -61,10 +61,11 @@
         .stat-value.masked { font-size: 15px; letter-spacing: 3px; color: var(--color-border); }
         .stat-box.highlight .stat-value { color: var(--color-primary); }
         .eye-toggle {
-            cursor: pointer; font-size: 15px;
+            cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center;
             opacity: 0.4; transition: opacity .15s; background: none; border: none; padding: 4px; border-radius: 6px;
         }
         .eye-toggle:hover { opacity: 1; background: var(--color-border-light); }
+        .eye-toggle svg { display: block; }
         .header-btns {
             position: absolute; top: 6px; right: 8px; display: flex; gap: 2px; align-items: center;
         }
