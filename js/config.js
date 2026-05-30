@@ -9,8 +9,7 @@ const SB_KEY = 'sb_publishable_VGkN1fbsKa_EuWjUIvYPIg_xq11vhMM';
 const SB_HEADERS = {
     'apikey': SB_KEY,
     'Authorization': 'Bearer ' + SB_KEY,
-    'Content-Type': 'application/json',
-    'Prefer': 'return=representation'
+    'Content-Type': 'application/json'
 };
 
 // 密码哈希 (SHA-256)

@@ -1,4 +1,4 @@
-        const defaultRecords = [
+const defaultRecords = [
     {
   "id": 1779101763309,
   "seq": 1,

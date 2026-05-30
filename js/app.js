@@ -181,12 +181,10 @@
         }
 
         // ===== 金额隐藏/显示 =====
-        // FIX: 始终维护真实值，切换只影响显示
         let statsMasked = true;
         const statsRealValues = { totalRecords: '0', totalQty: '0', totalAmount: '¥0' };
 
-        function toggleStatsMask() {
-            statsMasked = !statsMasked;
+        function applyStatsMask() {
             ['totalRecords', 'totalQty', 'totalAmount'].forEach(function(id) {
                 const el = document.getElementById(id);
                 if (statsMasked) {
@@ -197,6 +195,11 @@
                     el.classList.remove('masked');
                 }
             });
+        }
+
+        function toggleStatsMask() {
+            statsMasked = !statsMasked;
+            applyStatsMask();
             document.getElementById('eyeIconShow').style.display = statsMasked ? 'none' : 'block';
             document.getElementById('eyeIconHide').style.display = statsMasked ? 'block' : 'none';
         }
@@ -204,7 +207,7 @@
         // ===== Toast 通知 =====
         function showToast(message, type, duration) {
             type = type || 'info';
-            duration = duration || 3000;
+            duration = duration || APP_CONSTANTS.TOAST_DURATION;
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = 'toast ' + type;
@@ -281,7 +284,6 @@
             recalcSeq();
             scheduleSave();
             updateCustomerFilter();
-            updateInputLists();
             batchRender();
             showToast('已撤销删除：' + item.record.name + ' - ' + item.record.project, 'success');
         }
@@ -294,7 +296,7 @@
             setTimeout(function() {
                 toast.classList.add('removing');
                 setTimeout(function() { toast.remove(); }, 300);
-            }, 5000);
+            }, APP_CONSTANTS.TOAST_WARNING_DURATION);
         }
 
         // ===== 分页 =====
@@ -433,7 +435,6 @@
                 }
                 document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
                 updateCustomerFilter();
-                updateInputLists();
                 setupSuggest('inputName', 'customerSuggest', function() { return [...new Set(records.map(r => r.name))].sort(); });
                 setupSuggest('inputProject', 'projectSuggest', function() { return [...new Set(records.map(r => r.project))].sort(); });
                 initMonthOptions();
@@ -511,7 +512,6 @@
             invalidateFilterCache();
             scheduleSave();
             updateCustomerFilter();
-            updateInputLists();
             batchRender();
 
             document.getElementById('inputName').value = '';
@@ -538,14 +538,14 @@
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.name = value.trim();
-            scheduleSave(); updateCustomerFilter(); updateInputLists();
+            scheduleSave(); updateCustomerFilter();
         }
 
         function updateProject(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.project = value.trim();
-            scheduleSave(); updateInputLists();
+            scheduleSave();
         }
 
         function updateRemark(id, value) {
@@ -614,7 +614,6 @@
             recalcSeq();
             scheduleSave();
             updateCustomerFilter();
-            updateInputLists();
             batchRender();
             showUndoToast(removed);
         }
@@ -629,7 +628,7 @@
 
         // ===== 筛选 =====
 
-        function setPaidFilter(value, btn) {
+        function setPaidFilter(btn) {
             document.querySelectorAll('.paid-filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             applyFilter();
@@ -677,6 +676,7 @@
             if (!fab) return;
             let isDragging = false, hasMoved = false;
             let startX, startY, startLeft, startBottom;
+            let _fabTapped = 0;
 
             function getPos() {
                 const rect = fab.getBoundingClientRect();
@@ -718,7 +718,6 @@
                 if (!hasMoved) { toggleInput(); _fabTapped = Date.now(); }
             });
             // 兼容 PC 端模拟手机点击
-            let _fabTapped = 0;
             fab.addEventListener('click', function() {
                 if (Date.now() - _fabTapped < 400) return;
                 toggleInput();
@@ -918,23 +917,12 @@
             renderPagination(totalFiltered);
         }
 
-        // FIX: 统计金额显示bug - 始终维护真实值
         function updateStats() {
             const filtered = getFilteredRecords();
             statsRealValues.totalRecords = String(filtered.length);
             statsRealValues.totalQty = String(filtered.reduce((s, r) => s + r.qty, 0));
             statsRealValues.totalAmount = '¥' + filtered.reduce((s, r) => s + r.total, 0);
-
-            ['totalRecords', 'totalQty', 'totalAmount'].forEach(function(id) {
-                const el = document.getElementById(id);
-                if (statsMasked) {
-                    el.textContent = '***';
-                    el.classList.add('masked');
-                } else {
-                    el.textContent = statsRealValues[id];
-                    el.classList.remove('masked');
-                }
-            });
+            applyStatsMask();
         }
 
         function updateCustomerFilter() {
@@ -999,10 +987,6 @@
             document.addEventListener('click', function(e) {
                 if (!input.contains(e.target) && !list.contains(e.target)) list.classList.remove('show');
             });
-        }
-
-        function updateInputLists() {
-            // 数据源已更新，联想在输入时实时过滤
         }
 
         function autoFillPrice() {
@@ -1324,7 +1308,7 @@
                         records = records.concat(newRecords);
                     }
                     recalcSeq();
-                    saveData(); updateCustomerFilter(); updateInputLists(); batchRender();
+                    saveData(); updateCustomerFilter(); batchRender();
                     showToast('恢复成功！共 ' + newRecords.length + ' 条记录', 'success');
                 } else { showToast('没有找到有效的记录！', 'error'); }
             };
@@ -1356,7 +1340,7 @@
                 records = [];
                 deletedStack = [];
                 saveUndoStack();
-                saveData(); updateCustomerFilter(); updateInputLists(); batchRender();
+                saveData(); updateCustomerFilter(); batchRender();
                 showToast('已清空所有记录', 'info');
             }
         }
