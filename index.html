@@ -142,7 +142,7 @@
                 </div>
                 <div class="input-group">
                     <label>付款方式</label>
-                    <select id="inputMethod">
+                    <select id="inputMethod" onchange="if(this.value)document.getElementById('inputPaid').value='已付'">
                         <option value=""></option>
                         <option value="微信">微信</option>
                         <option value="支付宝">支付宝</option>
