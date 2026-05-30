@@ -156,8 +156,10 @@
         }
 
         function updateThemeButton(theme) {
-            const btn = document.getElementById('themeBtn');
-            if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+            const moon = document.getElementById('themeIconMoon');
+            const sun = document.getElementById('themeIconSun');
+            if (moon) moon.style.display = theme === 'dark' ? 'none' : 'block';
+            if (sun) sun.style.display = theme === 'dark' ? 'block' : 'none';
         }
 
         function initTheme() {
@@ -442,14 +444,13 @@
 
         // ===== 数据操作 =====
 
-        // FIX: 添加输入验证
-        function validateInput(date, name, project, price, qty) {
+        // 输入验证
+        function validateInput(name, project, price, qty) {
             const errors = [];
-            if (!date) errors.push('日期');
             if (!name) errors.push('客户名称');
             if (!project) errors.push('项目');
-            if (isNaN(price) || price < 0) errors.push('单价（需≥0）');
-            if (isNaN(qty) || qty < 1 || qty > 9999) errors.push('数量（需1~9999）');
+            if (isNaN(price)) errors.push('单价');
+            if (isNaN(qty) || qty < 1) errors.push('数量');
             return errors;
         }
 
@@ -478,15 +479,14 @@
             // 选了付款方式就自动标记为已付
             if (method) paid = '已付';
 
-            const errors = validateInput(date, name, project, price, qty);
+            const errors = validateInput(name, project, price, qty);
             if (errors.length > 0) {
                 showToast('请填写：' + errors.join('、'), 'warning');
                 const invalidIds = [];
-                if (!date) invalidIds.push('inputDate');
                 if (!name) invalidIds.push('inputName');
                 if (!project) invalidIds.push('inputProject');
-                if (isNaN(price) || price < 0) invalidIds.push('inputPrice');
-                if (isNaN(qty) || qty < 1 || qty > 9999) invalidIds.push('inputQty');
+                if (isNaN(price)) invalidIds.push('inputPrice');
+                if (isNaN(qty) || qty < 1) invalidIds.push('inputQty');
                 markInvalid(invalidIds);
                 return;
             }
@@ -1098,21 +1098,15 @@
             const activePaidBtn = document.querySelector('.paid-filter-btn.active');
             const paidFilter = activePaidBtn ? activePaidBtn.dataset.paid : '';
 
+            // 默认导出未结账记录；筛选为"已结账"时导出已付记录
             let billRecords;
             let billTypeLabel;
             if (paidFilter === 'paid') {
                 billRecords = records.filter(r => customers.includes(r.name) && r.paid);
                 billTypeLabel = '已结账对账单';
-            } else if (paidFilter === 'unpaid') {
+            } else {
                 billRecords = records.filter(r => customers.includes(r.name) && !r.paid);
                 billTypeLabel = '未结账结算单';
-            } else {
-                // 全部模式：弹出选择
-                const choice = prompt('请选择账单类型：\n1 - 未结账结算单\n2 - 已结账对账单\n3 - 全部记录', '1');
-                if (!choice) return;
-                if (choice === '1') { billRecords = records.filter(r => customers.includes(r.name) && !r.paid); billTypeLabel = '未结账结算单'; }
-                else if (choice === '2') { billRecords = records.filter(r => customers.includes(r.name) && r.paid); billTypeLabel = '已结账对账单'; }
-                else { billRecords = records.filter(r => customers.includes(r.name)); billTypeLabel = '全部记录对账单'; }
             }
 
             billRecords = billRecords.sort((a, b) => a.date.localeCompare(b.date));
