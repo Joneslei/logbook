@@ -429,40 +429,49 @@
         .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
         .chart-container { position: relative; height: 250px; }
 
-        /* 暗色模式支持 */
+        /* 暗色模式 - 暖灰调，低饱和度，长时间使用不累眼 */
         [data-theme="dark"] {
-            --color-primary: #60a5fa;
-            --color-primary-dark: #3b82f6;
-            --color-primary-light: #1a2332;
-            --color-success: #34d399;
-            --color-success-dark: #10b981;
-            --color-danger: #f87171;
-            --color-warning: #fbbf24;
-            --color-warning-dark: #f59e0b;
-            --color-text: #d1d5db;
-            --color-text-secondary: #8b929a;
-            --color-text-light: #5f6672;
-            --color-border: #2d333b;
-            --color-border-light: #21262d;
-            --color-bg: #161b22;
-            --color-bg-card: #1c2128;
-            --color-bg-hover: #22272e;
-            --color-bg-highlight: #1a2332;
+            --color-primary: #5b9eed;
+            --color-primary-dark: #4183d7;
+            --color-primary-light: #2a2d31;
+            --color-success: #56c28a;
+            --color-success-dark: #45a873;
+            --color-danger: #e8746f;
+            --color-warning: #e8b34a;
+            --color-warning-dark: #d49a30;
+            --color-text: #c9cdd4;
+            --color-text-secondary: #7e848c;
+            --color-text-light: #555b63;
+            --color-border: #33373d;
+            --color-border-light: #2a2d31;
+            --color-bg: #1a1d21;
+            --color-bg-card: #222529;
+            --color-bg-hover: #2a2d31;
+            --color-bg-highlight: #252830;
         }
 
         [data-theme="dark"] .login-overlay { background: var(--color-bg); }
-        [data-theme="dark"] .login-box { background: var(--color-bg-card); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+        [data-theme="dark"] .login-box { background: var(--color-bg-card); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
         [data-theme="dark"] .loading-overlay { background: var(--color-bg); }
         [data-theme="dark"] .suggest-list { background: var(--color-bg-card); border-color: var(--color-border); }
         [data-theme="dark"] .suggest-item:hover { background: var(--color-bg-hover); }
         [data-theme="dark"] .bill-card { border-color: var(--color-border); }
-        [data-theme="dark"] .bill-header { background: var(--color-text); }
-        [data-theme="dark"] .toast { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        [data-theme="dark"] .modal-content { box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+        [data-theme="dark"] .bill-header { background: #33373d; color: var(--color-text); }
+        [data-theme="dark"] .toast { box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        [data-theme="dark"] .modal-content { box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
         [data-theme="dark"] table { border-color: var(--color-border-light); }
         [data-theme="dark"] .delete-btn { background: var(--color-bg-card); }
-        [data-theme="dark"] .inline-select { background: var(--color-bg-card); color: var(--color-text); }
+        [data-theme="dark"] .inline-select { background: var(--color-bg-card); color: var(--color-text); border-color: var(--color-border); }
         [data-theme="dark"] .eye-toggle:hover { background: var(--color-bg-hover); }
+        [data-theme="dark"] .stat-box { border-color: var(--color-border); }
+        [data-theme="dark"] .stat-box.highlight { border-color: var(--color-primary-dark); background: var(--color-primary-light); }
+        [data-theme="dark"] .filter-area { background: var(--color-bg-hover); border-color: var(--color-border); }
+        [data-theme="dark"] .toolbar { background: var(--color-bg-hover); border-color: var(--color-border); }
+        [data-theme="dark"] .tb-btn { border-color: var(--color-border); }
+        [data-theme="dark"] .tb-btn:hover { border-color: var(--color-text-light); }
+        [data-theme="dark"] .btn-filter { border-color: var(--color-border); }
+        [data-theme="dark"] .input-area { border-color: var(--color-primary-dark); }
+        [data-theme="dark"] .shortcuts-hint kbd { border-color: var(--color-border); background: var(--color-bg-hover); }
 
         /* 无障碍：减少动画 */
         @media (prefers-reduced-motion: reduce) {

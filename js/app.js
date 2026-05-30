@@ -165,7 +165,7 @@
 
         function updateThemeColor(theme) {
             const meta = document.querySelector('meta[name="theme-color"]');
-            if (meta) meta.setAttribute('content', theme === 'dark' ? '#161b22' : '#1e40af');
+            if (meta) meta.setAttribute('content', theme === 'dark' ? '#1a1d21' : '#1e40af');
         }
 
         function applyTheme(theme) {
@@ -1416,7 +1416,7 @@
         function renderCharts() {
             const filtered = getFilteredRecords();
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const textColor = isDark ? '#d1d5db' : '#374151';
+            const textColor = isDark ? '#c9cdd4' : '#374151';
             const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
 
             // 1. 月度收支趋势图
@@ -1584,8 +1584,8 @@
                 pullIndicator.className = 'pull-refresh-indicator';
                 pullIndicator.innerHTML = '<div class="pull-refresh-spinner"></div><span>下拉刷新</span>';
                 const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                const indicatorBg = isDark ? '#1c2128' : '#fff';
-                const indicatorColor = isDark ? '#d1d5db' : '#333';
+                const indicatorBg = isDark ? '#222529' : '#fff';
+                const indicatorColor = isDark ? '#c9cdd4' : '#333';
                 pullIndicator.style.cssText = 'position:fixed;top:-60px;left:50%;transform:translateX(-50%);background:' + indicatorBg + ';color:' + indicatorColor + ';padding:12px 24px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;gap:8px;transition:top 0.3s ease;z-index:1000;';
                 document.body.appendChild(pullIndicator);
             }
