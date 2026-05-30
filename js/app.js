@@ -94,8 +94,25 @@
             return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
         let _saveTimer = null;
-        function scheduleSave() { clearTimeout(_saveTimer); _saveTimer = setTimeout(saveData, 300); }
-        function batchRender() { renderTable(); updateStats(); updateSelectedStats(); }
+        let _cloudSaveTimer = null;
+        function scheduleSave() {
+            clearTimeout(_saveTimer);
+            _saveTimer = setTimeout(saveData, 300);
+            // 云端同步独立防抖，避免频繁调用
+            clearTimeout(_cloudSaveTimer);
+            _cloudSaveTimer = setTimeout(function() { saveToCloud(records); }, APP_CONSTANTS.CLOUD_SYNC_INTERVAL);
+        }
+        let _renderPending = false;
+        function batchRender() {
+            if (_renderPending) return;
+            _renderPending = true;
+            requestAnimationFrame(function() {
+                _renderPending = false;
+                renderTable();
+                updateStats();
+                updateSelectedStats();
+            });
+        }
 
         // ===== 防抖工具 =====
         function debounce(fn, ms) {
@@ -1205,7 +1222,6 @@
                     showToast('本地保存失败：' + e.message, 'error');
                 }
             }
-            saveToCloud(records);
         }
 
         function manualBackup() {
