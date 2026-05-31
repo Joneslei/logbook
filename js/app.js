@@ -541,6 +541,7 @@
             });
 
             invalidateFilterCache();
+            saveData();
             scheduleSave();
             updateCustomerFilter();
             batchRender();
@@ -1271,11 +1272,10 @@
             activeContent.style.transform = 'translate(calc(-50% + ' + currentX + 'px), ' + currentY + 'px)';
         });
 
-        // ===== 离开页面提醒 =====
-        window.addEventListener('beforeunload', e => {
+        // ===== 离开页面前强制保存 =====
+        window.addEventListener('beforeunload', function() {
             if (_saveTimer || dirtyRows.size > 0) {
-                e.preventDefault();
-                e.returnValue = '有未保存的更改，确定离开吗？';
+                saveData();
             }
         });
 
