@@ -201,7 +201,8 @@
                 <button class="tb-btn tb-backup" onclick="manualBackup()">💾 备份</button>
                 <button class="tb-btn tb-restore" onclick="restoreBackup()">📂 恢复</button>
                 <button class="tb-btn tb-chart" onclick="showChart()">📈 图表</button>
-                <button class="tb-btn tb-clear" onclick="clearAll()">🗑️ 清空</button>
+                <button class="tb-btn tb-delete" onclick="batchDelete()">🗑️ 删除选中</button>
+                <button class="tb-btn tb-clear" onclick="clearAll()">⚠️ 清空全部</button>
                 <input type="file" id="restoreFile" accept=".csv" class="file-input-hidden" onchange="handleRestore(event)">
             </div>
             <div class="toolbar-divider"></div>

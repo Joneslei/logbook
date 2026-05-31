@@ -1109,6 +1109,29 @@
             showToast('批量修改完成！', 'success');
         }
 
+        function batchDelete() {
+            const checked = document.querySelectorAll('.row-checkbox:checked');
+            if (!checked.length) { showToast('请先勾选要删除的记录！', 'warning'); return; }
+            if (!confirm('确定删除选中的 ' + checked.length + ' 条记录？\n\n此操作可通过 Ctrl+Z 撤销。')) return;
+
+            const ids = [];
+            checked.forEach(function(cb) { ids.push(parseInt(cb.getAttribute('data-id'))); });
+            ids.forEach(function(id) {
+                const idx = records.findIndex(function(r) { return r.id === id; });
+                if (idx < 0) return;
+                const removed = records.splice(idx, 1)[0];
+                deletedStack.push({ record: removed, index: idx });
+            });
+            if (deletedStack.length > APP_CONSTANTS.UNDO_MAX) deletedStack.splice(0, deletedStack.length - APP_CONSTANTS.UNDO_MAX);
+            saveUndoStack();
+            invalidateFilterCache();
+            recalcSeq();
+            saveData();
+            updateCustomerFilter();
+            batchRender();
+            showToast('已删除 ' + ids.length + ' 条记录', 'success');
+        }
+
         // ===== 账单 =====
 
         function generateBill() {
@@ -1366,7 +1389,8 @@
         }
 
         function clearAll() {
-            if (confirm('确定清空所有记录？此操作不可恢复！')) {
+            if (!confirm('⚠️ 第一次确认：确定要清空所有 ' + records.length + ' 条记录吗？')) return;
+            if (confirm('⚠️ 最终确认：此操作不可恢复！\n\n输入"确定"继续清空，点"取消"放弃。')) {
                 records = [];
                 deletedStack = [];
                 saveUndoStack();
