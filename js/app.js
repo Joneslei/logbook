@@ -1367,7 +1367,7 @@
                         records = records.concat(newRecords);
                     }
                     recalcSeq();
-                    saveData(); updateCustomerFilter(); batchRender();
+                    saveData(); saveToCloud(records, true); updateCustomerFilter(); batchRender();
                     showToast('恢复成功！共 ' + newRecords.length + ' 条记录', 'success');
                 } else { showToast('没有找到有效的记录！', 'error'); }
             };
@@ -1400,7 +1400,7 @@
                 records = [];
                 deletedStack = [];
                 saveUndoStack();
-                saveData(); updateCustomerFilter(); batchRender();
+                saveData(); saveToCloud(records, true); updateCustomerFilter(); batchRender();
                 showToast('已清空所有记录', 'info');
             }
         }
