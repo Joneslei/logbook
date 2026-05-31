@@ -374,10 +374,10 @@
         }
 
         // FIX: 改用 UPSERT 替代 DELETE+INSERT，防止数据丢失
-        async function saveToCloud(recordsToSave) {
+        async function saveToCloud(recordsToSave, force) {
             if (!isOnline) return;
-            // 防抖：距上次同步不到间隔时间则跳过
-            if (Date.now() - _lastCloudSync < APP_CONSTANTS.CLOUD_SYNC_INTERVAL) return;
+            // 防抖：距上次同步不到间隔时间则跳过（force=true 时跳过检查）
+            if (!force && Date.now() - _lastCloudSync < APP_CONSTANTS.CLOUD_SYNC_INTERVAL) return;
             _lastCloudSync = Date.now();
 
             setSyncStatus('syncing', '同步中...');
@@ -541,7 +541,7 @@
 
             invalidateFilterCache();
             saveData();
-            scheduleSave();
+            saveToCloud(records, true);
             updateCustomerFilter();
             batchRender();
 
