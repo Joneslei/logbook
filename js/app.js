@@ -476,7 +476,12 @@
                         _isProcessingRealtime = false;
                     })
                     .subscribe(function(status) {
-                        if (status === 'SUBSCRIBED') console.log('实时同步已连接');
+                        console.log('实时同步状态:', status);
+                        if (status === 'SUBSCRIBED') {
+                            showToast('实时同步已连接', 'success');
+                        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                            console.warn('实时同步连接失败，将使用轮询同步');
+                        }
                     });
             } catch (e) {
                 console.warn('实时同步初始化失败:', e);
