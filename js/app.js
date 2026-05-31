@@ -431,6 +431,58 @@
             return ctrl.signal;
         }
 
+        // ===== 实时同步（Supabase Realtime） =====
+        let _realtimeChannel = null;
+        let _isProcessingRealtime = false;
+
+        function startRealtime() {
+            if (typeof supabase === 'undefined') return;
+            try {
+                var client = supabase.createClient(SB_URL, SB_KEY);
+                _realtimeChannel = client.channel('records-changes')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'records' }, function(payload) {
+                        _isProcessingRealtime = true;
+                        if (payload.eventType === 'INSERT') {
+                            if (!records.find(function(r) { return r.id === payload.new.id; })) {
+                                records.push({
+                                    id: payload.new.id, seq: payload.new.seq, date: payload.new.date,
+                                    name: payload.new.name || '', project: payload.new.project || '',
+                                    price: Number(payload.new.price) || 0, qty: payload.new.qty || 1,
+                                    total: Number(payload.new.total) || 0, paid: payload.new.paid || '',
+                                    method: payload.new.method || '', remark: payload.new.remark || ''
+                                });
+                                recalcSeq();
+                            }
+                        } else if (payload.eventType === 'UPDATE') {
+                            var idx = records.findIndex(function(r) { return r.id === payload.new.id; });
+                            if (idx >= 0) {
+                                records[idx] = {
+                                    id: payload.new.id, seq: payload.new.seq, date: payload.new.date,
+                                    name: payload.new.name || '', project: payload.new.project || '',
+                                    price: Number(payload.new.price) || 0, qty: payload.new.qty || 1,
+                                    total: Number(payload.new.total) || 0, paid: payload.new.paid || '',
+                                    method: payload.new.method || '', remark: payload.new.remark || ''
+                                };
+                            }
+                        } else if (payload.eventType === 'DELETE') {
+                            var delIdx = records.findIndex(function(r) { return r.id === payload.old.id; });
+                            if (delIdx >= 0) records.splice(delIdx, 1);
+                            recalcSeq();
+                        }
+                        invalidateFilterCache();
+                        localStorage.setItem('accountRecords', JSON.stringify(records));
+                        updateCustomerFilter();
+                        batchRender();
+                        _isProcessingRealtime = false;
+                    })
+                    .subscribe(function(status) {
+                        if (status === 'SUBSCRIBED') console.log('实时同步已连接');
+                    });
+            } catch (e) {
+                console.warn('实时同步初始化失败:', e);
+            }
+        }
+
         // ===== 初始化 =====
         function mergeLocalRecords(cloudRecords) {
             try {
@@ -487,6 +539,9 @@
                 const searchInput = document.getElementById('searchKeyword');
                 const debouncedFilter = debounce(applyFilter, 300);
                 searchInput.addEventListener('input', debouncedFilter);
+
+                // 启动实时同步
+                startRealtime();
             })();
         }
         if (sessionStorage.getItem('loggedIn') === '1') initApp();
