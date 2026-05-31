@@ -290,7 +290,7 @@
             records.splice(item.index, 0, item.record);
             invalidateFilterCache();
             recalcSeq();
-            scheduleSave();
+            saveData();
             updateCustomerFilter();
             batchRender();
             showToast('已撤销删除：' + item.record.name + ' - ' + item.record.project, 'success');
@@ -562,28 +562,28 @@
             if (!r) return;
             r.price = Math.max(0, parseFloat(value) || 0);
             r.total = r.price * r.qty;
-            invalidateFilterCache(); scheduleSave(); batchRender();
+            invalidateFilterCache(); saveData(); batchRender();
         }
 
         function updateName(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.name = value.trim();
-            scheduleSave(); updateCustomerFilter();
+            saveData(); updateCustomerFilter();
         }
 
         function updateProject(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.project = value.trim();
-            scheduleSave();
+            saveData();
         }
 
         function updateRemark(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.remark = value.trim();
-            scheduleSave();
+            saveData();
         }
 
         function updateQty(id, value) {
@@ -591,7 +591,7 @@
             if (!r) return;
             r.qty = Math.max(1, parseInt(value) || 1);
             r.total = r.price * r.qty;
-            invalidateFilterCache(); scheduleSave(); batchRender();
+            invalidateFilterCache(); saveData(); batchRender();
         }
 
         // FIX: 删除 updateTotal，总价只能由 price*qty 自动计算
@@ -613,7 +613,7 @@
             if (r.paid && !r.method) r.method = '微信';
             if (!r.paid) r.method = '';
 
-            scheduleSave();
+            saveData();
             updateRowDisplay(id);
             updateStats();
             updateCustomerFilter();
@@ -643,7 +643,7 @@
             saveUndoStack();
             invalidateFilterCache();
             recalcSeq();
-            scheduleSave();
+            saveData();
             updateCustomerFilter();
             batchRender();
             showUndoToast(removed);
@@ -1105,7 +1105,7 @@
                     else { r.paid = ''; r.method = ''; }
                 }
             });
-            scheduleSave(); batchRender();
+            saveData(); batchRender();
             showToast('批量修改完成！', 'success');
         }
 
