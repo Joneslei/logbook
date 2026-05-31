@@ -350,10 +350,11 @@
         }
 
         // ===== Supabase 数据操作 =====
-        async function loadFromCloud() {
+        async function loadFromCloud(retries) {
+            retries = retries || 0;
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(function() { controller.abort(); }, 8000);
+                const timeoutId = setTimeout(function() { controller.abort(); }, 15000);
                 const resp = await fetch(sbUrl('records', '?order=date.desc,seq.asc&_t=' + Date.now()), { headers: SB_HEADERS, signal: controller.signal });
                 clearTimeout(timeoutId);
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -367,7 +368,13 @@
                 setSyncStatus('online', '已连接云端');
                 return true;
             } catch (e) {
-                console.warn('云端加载失败，使用本地数据', e);
+                console.warn('云端加载失败:', e.message);
+                // 网络未就绪时自动重试一次
+                if (retries < 1 && (e.name === 'AbortError' || e.message.includes('Failed to fetch'))) {
+                    console.log('2秒后重试云端连接...');
+                    await new Promise(function(r) { setTimeout(r, 2000); });
+                    return loadFromCloud(retries + 1);
+                }
                 isOnline = false;
                 setSyncStatus('offline', '离线模式');
                 return false;
