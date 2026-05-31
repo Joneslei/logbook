@@ -291,6 +291,7 @@
             invalidateFilterCache();
             recalcSeq();
             saveData();
+            saveToCloud(records, true);
             updateCustomerFilter();
             batchRender();
             showToast('已撤销删除：' + item.record.name + ' - ' + item.record.project, 'success');
@@ -644,6 +645,7 @@
             invalidateFilterCache();
             recalcSeq();
             saveData();
+            saveToCloud(records, true);
             updateCustomerFilter();
             batchRender();
             showUndoToast(removed);
@@ -1105,7 +1107,9 @@
                     else { r.paid = ''; r.method = ''; }
                 }
             });
-            saveData(); batchRender();
+            saveData();
+            saveToCloud(records, true);
+            batchRender();
             showToast('批量修改完成！', 'success');
         }
 
@@ -1127,6 +1131,7 @@
             invalidateFilterCache();
             recalcSeq();
             saveData();
+            saveToCloud(records, true);
             updateCustomerFilter();
             batchRender();
             showToast('已删除 ' + ids.length + ' 条记录', 'success');
