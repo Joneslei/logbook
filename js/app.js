@@ -423,6 +423,25 @@
         }
 
         // ===== 初始化 =====
+        function mergeLocalRecords(cloudRecords) {
+            try {
+                const saved = localStorage.getItem('accountRecords');
+                if (!saved) return;
+                const localRecords = JSON.parse(saved);
+                const cloudIds = new Set(cloudRecords.map(function(r) { return r.id; }));
+                const newLocal = localRecords.filter(function(r) { return !cloudIds.has(r.id); });
+                if (newLocal.length > 0) {
+                    records = records.concat(newLocal);
+                    recalcSeq();
+                    localStorage.setItem('accountRecords', JSON.stringify(records));
+                    scheduleSave();
+                    showToast('已恢复 ' + newLocal.length + ' 条未同步记录', 'info');
+                }
+            } catch (e) {
+                console.warn('合并本地数据失败:', e);
+            }
+        }
+
         function initApp() {
             (async function() {
                 loadUndoStack();
@@ -435,11 +454,15 @@
                         console.warn('读取本地数据失败，使用默认数据', e);
                         records = defaultRecords;
                     }
-                } else if (records.length === 0 && defaultRecords.length > 0) {
-                    records = defaultRecords.slice();
-                    saveToCloud(records);
-                    localStorage.setItem('accountRecords', JSON.stringify(records));
-                    showToast('默认数据已导入云端', 'success');
+                } else {
+                    // 云端成功加载后，合并本地新增的记录（防止未同步的新记录丢失）
+                    mergeLocalRecords(records);
+                    if (records.length === 0 && defaultRecords.length > 0) {
+                        records = defaultRecords.slice();
+                        saveToCloud(records);
+                        localStorage.setItem('accountRecords', JSON.stringify(records));
+                        showToast('默认数据已导入云端', 'success');
+                    }
                 }
                 document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
                 updateCustomerFilter();
