@@ -364,7 +364,6 @@
                 });
                 isOnline = true;
                 setSyncStatus('online', '已连接云端');
-                localStorage.setItem('accountRecords', JSON.stringify(records));
                 return true;
             } catch (e) {
                 console.warn('云端加载失败，使用本地数据', e);
@@ -459,10 +458,10 @@
                     mergeLocalRecords(records);
                     if (records.length === 0 && defaultRecords.length > 0) {
                         records = defaultRecords.slice();
-                        saveToCloud(records);
-                        localStorage.setItem('accountRecords', JSON.stringify(records));
                         showToast('默认数据已导入云端', 'success');
                     }
+                    // 合并完成后再写入localStorage（避免覆盖未同步的本地数据）
+                    localStorage.setItem('accountRecords', JSON.stringify(records));
                 }
                 document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
                 updateCustomerFilter();
