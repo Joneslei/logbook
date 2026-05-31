@@ -563,28 +563,28 @@
             if (!r) return;
             r.price = Math.max(0, parseFloat(value) || 0);
             r.total = r.price * r.qty;
-            invalidateFilterCache(); saveData(); batchRender();
+            invalidateFilterCache(); saveData(); saveToCloud(records, true); batchRender();
         }
 
         function updateName(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.name = value.trim();
-            saveData(); updateCustomerFilter();
+            saveData(); saveToCloud(records, true); updateCustomerFilter();
         }
 
         function updateProject(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.project = value.trim();
-            saveData();
+            saveData(); saveToCloud(records, true);
         }
 
         function updateRemark(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.remark = value.trim();
-            saveData();
+            saveData(); saveToCloud(records, true);
         }
 
         function updateQty(id, value) {
@@ -592,7 +592,7 @@
             if (!r) return;
             r.qty = Math.max(1, parseInt(value) || 1);
             r.total = r.price * r.qty;
-            invalidateFilterCache(); saveData(); batchRender();
+            invalidateFilterCache(); saveData(); saveToCloud(records, true); batchRender();
         }
 
         // FIX: 删除 updateTotal，总价只能由 price*qty 自动计算
@@ -615,6 +615,7 @@
             if (!r.paid) r.method = '';
 
             saveData();
+            saveToCloud(records, true);
             updateRowDisplay(id);
             updateStats();
             updateCustomerFilter();
