@@ -1390,7 +1390,7 @@
 
         function clearAll() {
             if (!confirm('⚠️ 第一次确认：确定要清空所有 ' + records.length + ' 条记录吗？')) return;
-            if (confirm('⚠️ 最终确认：此操作不可恢复！\n\n输入"确定"继续清空，点"取消"放弃。')) {
+            if (confirm('⚠️ 最终确认：此操作不可恢复，且无法撤销！\n\n建议先点「备份」保存一份。\n\n点「确定」立即清空，点「取消」放弃。')) {
                 records = [];
                 deletedStack = [];
                 saveUndoStack();
