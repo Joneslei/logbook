@@ -355,7 +355,8 @@
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(function() { controller.abort(); }, 15000);
-                const resp = await fetch(sbUrl('records', '?order=date.desc,seq.asc'), { headers: Object.assign({}, SB_HEADERS, { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }), signal: controller.signal });
+                const url = SB_URL + '/rest/v1/records?order=date.desc,seq.asc';
+                const resp = await fetch(url, { headers: SB_HEADERS, signal: controller.signal, cache: 'no-store' });
                 clearTimeout(timeoutId);
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
                 const data = await resp.json();
