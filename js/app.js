@@ -391,7 +391,7 @@
 
             setSyncStatus('syncing', '同步中...');
             try {
-                const resp = await fetch(sbUrl('records', '?select=id'), { headers: SB_HEADERS, signal: abortSignal(8000) });
+                const resp = await fetch(sbUrl('records', '?select=id'), { headers: SB_HEADERS, signal: abortSignal(8000), cache: 'no-store' });
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
                 const existingIds = (await resp.json()).map(r => r.id);
                 const localIds = new Set(recordsToSave.map(r => r.id));
@@ -400,7 +400,8 @@
                 const toDelete = existingIds.filter(id => !localIds.has(id));
                 for (let i = 0; i < toDelete.length; i += 100) {
                     const batch = toDelete.slice(i, i + 100);
-                    await fetch(sbUrl('records', '?id=in.(' + batch.join(',') + ')'), { method: 'DELETE', headers: SB_HEADERS, signal: abortSignal(8000) });
+                    const delResp = await fetch(sbUrl('records', '?id=in.(' + batch.join(',') + ')'), { method: 'DELETE', headers: SB_HEADERS, signal: abortSignal(8000), cache: 'no-store' });
+                    if (!delResp.ok) throw new Error('DELETE failed: ' + delResp.status);
                 }
 
                 // 增量 UPSERT（分批50条）
@@ -410,7 +411,7 @@
                                  price: r.price, qty: r.qty, total: r.total, paid: r.paid || null,
                                  method: r.method || null, remark: r.remark || null };
                     });
-                    const r = await fetch(sbUrl('records'), { method: 'POST', headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates' }, body: JSON.stringify(batch), signal: abortSignal(10000) });
+                    const r = await fetch(sbUrl('records'), { method: 'POST', headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates' }, body: JSON.stringify(batch), signal: abortSignal(10000), cache: 'no-store' });
                     if (!r.ok) throw new Error('POST failed: ' + r.status);
                 }
 
