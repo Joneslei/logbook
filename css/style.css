@@ -437,17 +437,17 @@
         .hidden { display: none !important; }
 
         /* 客户档案弹窗 */
-        .profile-modal-content { max-width: 750px; }
-        .profile-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
-        .profile-stat { text-align: center; padding: 14px 8px; background: var(--color-bg-hover); border-radius: 10px; border: 1px solid var(--color-border-light); }
-        .profile-stat-value { font-size: 20px; font-weight: 700; color: var(--color-primary); }
-        .profile-stat-label { font-size: 11px; color: var(--color-text-secondary); margin-top: 4px; }
-        .profile-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .profile-table th { background: var(--color-bg-hover); padding: 8px 10px; text-align: center; font-size: 12px; color: var(--color-text-secondary); position: sticky; top: 0; }
-        .profile-table td { padding: 8px 10px; text-align: center; border-bottom: 1px solid var(--color-bg); }
-        .profile-table-wrap { max-height: 350px; overflow-y: auto; }
-        .profile-filter { display: flex; gap: 8px; margin-bottom: 12px; }
-        .profile-filter .btn-filter { padding: 6px 12px; font-size: 12px; }
+        .profile-modal-content { max-width: 95vw; width: 900px; }
+        .profile-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+        .profile-stat { text-align: center; padding: 10px 6px; background: var(--color-bg-hover); border-radius: 8px; border: 1px solid var(--color-border-light); }
+        .profile-stat-value { font-size: 18px; font-weight: 700; color: var(--color-primary); }
+        .profile-stat-label { font-size: 10px; color: var(--color-text-secondary); margin-top: 2px; }
+        .profile-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .profile-table th { background: var(--color-bg-hover); padding: 6px 8px; text-align: center; font-size: 11px; color: var(--color-text-secondary); position: sticky; top: 0; }
+        .profile-table td { padding: 5px 8px; text-align: center; border-bottom: 1px solid var(--color-bg); }
+        .profile-table-wrap { max-height: 55vh; overflow-y: auto; }
+        .profile-filter { display: flex; gap: 6px; margin-bottom: 10px; }
+        .profile-filter .btn-filter { padding: 5px 10px; font-size: 11px; }
         .customer-link { cursor: pointer; font-size: 13px; opacity: 0.5; transition: opacity .15s; }
         .customer-link:hover { opacity: 1; }
 

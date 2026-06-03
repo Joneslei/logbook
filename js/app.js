@@ -1040,7 +1040,7 @@
                         '<span class="text-display">' + esc(r.remark || '') + '</span>' +
                         '<input type="text" class="inline-select select-edit" value="' + esc(r.remark || '') + '" onchange="updateRemark(' + r.id + ', this.value)">' +
                     '</td>' +
-                    '<td><button class="profile-btn" onclick="showCustomerProfile(\'' + esc(r.name).replace(/'/g, "\\'") + '\')" title="客户档案">📋</button> <button class="delete-btn" onclick="deleteRecord(' + r.id + ')">删除</button></td>';
+                    '<td><button class="profile-btn" onclick="showCustomerProfile(\'' + esc(r.name).replace(/'/g, "\\'") + '\')" title="客户档案">👤</button> <button class="delete-btn" onclick="deleteRecord(' + r.id + ')">删除</button></td>';
                 fragment.appendChild(tr);
             });
 
