@@ -437,15 +437,16 @@
         .hidden { display: none !important; }
 
         /* 客户档案弹窗 */
-        .profile-modal-content { max-width: 95vw; width: 900px; }
+        .profile-modal-content { max-width: 95vw; padding: 16px; }
         .profile-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
         .profile-stat { text-align: center; padding: 10px 6px; background: var(--color-bg-hover); border-radius: 8px; border: 1px solid var(--color-border-light); }
         .profile-stat-value { font-size: 18px; font-weight: 700; color: var(--color-primary); }
         .profile-stat-label { font-size: 10px; color: var(--color-text-secondary); margin-top: 2px; }
         .profile-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .profile-table th { background: var(--color-bg-hover); padding: 6px 6px; text-align: center; font-size: 11px; color: var(--color-text-secondary); position: sticky; top: 0; }
-        .profile-table td { padding: 5px 6px; text-align: center; border-bottom: 1px solid var(--color-bg); }
-        .profile-table td:nth-child(2) { text-align: left; max-width: 200px; word-break: break-all; }
+        .profile-table th { background: var(--color-bg-hover); padding: 6px 4px; text-align: center; font-size: 11px; color: var(--color-text-secondary); position: sticky; top: 0; }
+        .profile-table td { padding: 5px 4px; text-align: center; border-bottom: 1px solid var(--color-bg); }
+        .profile-table td:nth-child(1) { white-space: nowrap; }
+        .profile-table td:nth-child(2) { text-align: left; word-break: break-all; }
         .profile-table-wrap { max-height: 55vh; overflow-y: auto; }
         .profile-filter { display: flex; gap: 6px; margin-bottom: 10px; }
         .profile-filter .btn-filter { padding: 5px 10px; font-size: 11px; }
