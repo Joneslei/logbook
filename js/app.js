@@ -1139,6 +1139,12 @@
         // FIX: 移动端用 click 触发编辑
         function mobileEditCell(cell) {
             if (window.innerWidth > 768) return; // 桌面端用 hover
+            // 付款和方式可以随时编辑，其他字段需要先点编辑按钮
+            const isPayOrMethod = cell.querySelector('.pay-edit, .method-edit');
+            if (!isPayOrMethod) {
+                const row = cell.closest('tr');
+                if (!row || !row.classList.contains('editing')) return;
+            }
             // 关闭其他已打开的编辑
             document.querySelectorAll('.mobile-active').forEach(c => {
                 if (c !== cell) c.classList.remove('mobile-active');
