@@ -434,12 +434,39 @@
         // ===== 实时同步（Supabase Realtime） =====
         let _realtimeChannel = null;
         let _isProcessingRealtime = false;
+        let _onlineDevices = 1;
+        let _deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+
+        function updateOnlineCount() {
+            var el = document.getElementById('syncText');
+            if (!el) return;
+            if (isOnline && _onlineDevices > 1) {
+                el.textContent = '已连接 · ' + _onlineDevices + ' 台设备在线';
+            } else if (isOnline) {
+                el.textContent = '已连接云端';
+            }
+        }
 
         function startRealtime() {
             if (typeof supabase === 'undefined') return;
             try {
                 var client = supabase.createClient(SB_URL, SB_KEY);
                 _realtimeChannel = client.channel('records-changes')
+                    .on('presence', { event: 'sync' }, function() {
+                        var state = _realtimeChannel.presenceState();
+                        _onlineDevices = Object.keys(state).length;
+                        updateOnlineCount();
+                    })
+                    .on('presence', { event: 'join' }, function() {
+                        var state = _realtimeChannel.presenceState();
+                        _onlineDevices = Object.keys(state).length;
+                        updateOnlineCount();
+                    })
+                    .on('presence', { event: 'leave' }, function() {
+                        var state = _realtimeChannel.presenceState();
+                        _onlineDevices = Object.keys(state).length;
+                        updateOnlineCount();
+                    })
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'records' }, function(payload) {
                         _isProcessingRealtime = true;
                         if (payload.eventType === 'INSERT') {
@@ -475,10 +502,14 @@
                         batchRender();
                         _isProcessingRealtime = false;
                     })
-                    .subscribe(function(status) {
+                    .subscribe(async function(status) {
                         console.log('实时同步状态:', status);
                         if (status === 'SUBSCRIBED') {
                             showToast('实时同步已连接', 'success');
+                            await _realtimeChannel.track({
+                                user: _deviceId,
+                                online_at: new Date().toISOString()
+                            });
                         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
                             console.warn('实时同步连接失败，将使用轮询同步');
                         }
