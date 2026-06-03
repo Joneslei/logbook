@@ -991,6 +991,9 @@
             const totalFiltered = allFiltered.length;
             const totalPages = Math.max(1, Math.ceil(totalFiltered / APP_CONSTANTS.PAGE_SIZE));
 
+            // 重置全选框
+            document.getElementById('selectAll').checked = false;
+
             // 分页切片
             const startIdx = (currentPage - 1) * APP_CONSTANTS.PAGE_SIZE;
             const filtered = allFiltered.slice(startIdx, startIdx + APP_CONSTANTS.PAGE_SIZE);
@@ -1130,7 +1133,7 @@
                 if (!items.length || !list.classList.contains('show')) return;
                 if (e.key === 'ArrowDown') { e.preventDefault(); _suggestIdx = Math.min(_suggestIdx + 1, items.length - 1); items.forEach((it, i) => it.classList.toggle('active', i === _suggestIdx)); }
                 else if (e.key === 'ArrowUp') { e.preventDefault(); _suggestIdx = Math.max(_suggestIdx - 1, 0); items.forEach((it, i) => it.classList.toggle('active', i === _suggestIdx)); }
-                else if (e.key === 'Enter' && _suggestIdx >= 0) { e.preventDefault(); input.value = items[_suggestIdx].dataset.val; list.classList.remove('show'); input.dispatchEvent(new Event('change')); }
+                else if (e.key === 'Enter' && _suggestIdx >= 0) { e.preventDefault(); e.stopImmediatePropagation(); input.value = items[_suggestIdx].dataset.val; list.classList.remove('show'); input.dispatchEvent(new Event('change')); }
                 else if (e.key === 'Escape') { list.classList.remove('show'); }
             });
 
