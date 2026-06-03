@@ -1471,27 +1471,47 @@
             c.style.background = '#fff';
             c.style.color = '#1f2937';
             c.style.borderColor = '#e5e7eb';
-            // 所有子元素强制亮色
-            c.querySelectorAll('*').forEach(function(el) {
+            // 标题
+            c.querySelectorAll('.bill-title').forEach(function(el) {
                 el.style.color = '#1f2937';
-                el.style.borderColor = '#e5e7eb';
-                el.style.background = el.style.background || '';
             });
-            // 表头特殊处理
-            c.querySelectorAll('.bill-header, th').forEach(function(el) {
+            // 客户/日期信息栏
+            c.querySelectorAll('.bill-info').forEach(function(el) {
+                el.style.background = '#f9fafb';
+                el.style.color = '#1f2937';
+            });
+            c.querySelectorAll('.bill-info-label').forEach(function(el) {
+                el.style.color = '#6b7280';
+            });
+            c.querySelectorAll('.bill-info-value').forEach(function(el) {
+                el.style.color = '#1f2937';
+            });
+            // 表头深底白字
+            c.querySelectorAll('.bill-header').forEach(function(el) {
                 el.style.background = '#1f2937';
                 el.style.color = '#fff';
+            });
+            // 项目内容
+            c.querySelectorAll('.bill-item').forEach(function(el) {
+                el.style.color = '#1f2937';
+                el.style.borderColor = '#e5e7eb';
+            });
+            c.querySelectorAll('.bill-item-no, .bill-item-date, .bill-item-price, .bill-item-qty').forEach(function(el) {
+                el.style.color = '#6b7280';
+            });
+            c.querySelectorAll('.bill-item-project').forEach(function(el) {
+                el.style.color = '#1f2937';
             });
             // 偶数行背景
             c.querySelectorAll('.bill-item:nth-child(even)').forEach(function(el) {
                 el.style.background = '#f9fafb';
             });
-            // 金额红色保留
+            // 金额红色
             c.querySelectorAll('.bill-item-total, .bill-amount').forEach(function(el) {
                 el.style.color = '#dc2626';
             });
-            // 标签灰色
-            c.querySelectorAll('.bill-info-label').forEach(function(el) {
+            // 底部
+            c.querySelectorAll('.bill-footer-text').forEach(function(el) {
                 el.style.color = '#6b7280';
             });
         }
