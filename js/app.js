@@ -56,8 +56,9 @@
                 loginAttempts++;
                 if (loginAttempts >= APP_CONSTANTS.LOGIN_ATTEMPTS_MAX) {
                     loginLockoutUntil = Date.now() + APP_CONSTANTS.LOGIN_LOCKOUT_DURATION;
-                    errEl.textContent = '登录尝试次数过多，请等待 30 秒';
-                    showToast('登录尝试次数过多，已锁定30秒', 'error');
+                    var lockSec = Math.round(APP_CONSTANTS.LOGIN_LOCKOUT_DURATION / 1000);
+                    errEl.textContent = '登录尝试次数过多，请等待 ' + lockSec + ' 秒';
+                    showToast('登录尝试次数过多，已锁定' + lockSec + '秒', 'error');
                 } else {
                     errEl.textContent = '密码错误，请重试 (' + loginAttempts + '/' + APP_CONSTANTS.LOGIN_ATTEMPTS_MAX + ')';
                 }
@@ -334,7 +335,7 @@
             html += `<span class="page-info">${totalFiltered}条 / ${totalPages}页</span>`;
             el.innerHTML = html;
         }
-        function goPage(p) { currentPage = p; renderTable(); document.querySelector('.table-wrap').scrollTop = 0; }
+        function goPage(p) { currentPage = p; renderTable(); updateSelectedStats(); document.querySelector('.table-wrap').scrollTop = 0; }
 
         // ===== 全局状态 =====
         let records = [];
@@ -556,7 +557,7 @@
                     mergeLocalRecords(records);
                     if (records.length === 0 && defaultRecords.length > 0) {
                         records = defaultRecords.slice();
-                        showToast('默认数据已导入云端', 'success');
+                        showToast('默认数据已加载', 'success');
                     }
                     // 合并完成后再写入localStorage（避免覆盖未同步的本地数据）
                     localStorage.setItem('accountRecords', JSON.stringify(records));
@@ -1004,7 +1005,7 @@
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
                         '<span class="text-display">' + esc(r.name) + '</span>' +
                         '<input type="text" class="inline-select select-edit" value="' + esc(r.name) + '" onchange="updateName(' + r.id + ', this.value)">' +
-                        '<button class="profile-btn" onclick="event.stopPropagation();showCustomerProfile(\'' + esc(r.name).replace(/'/g, "\\'") + '\')" title="客户档案" style="margin-left:4px;font-size:10px;padding:2px 6px;">👤</button>' +
+                        '<button class="profile-btn" onclick="event.stopPropagation();showCustomerProfile(this.dataset.name)" data-name="' + esc(r.name) + '" title="客户档案" style="margin-left:4px;font-size:10px;padding:2px 6px;">👤</button>' +
                     '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
                         '<span class="text-display">' + esc(r.project) + '</span>' +
@@ -1021,14 +1022,14 @@
                     '<td>¥' + r.total + '</td>' +
                     '<td style="position:relative;" onmouseenter="showEdit(this)" onmouseleave="hideEdit(this)" onclick="mobileEditCell(this)">' +
                         '<span class="pay-display ' + (r.paid ? 'paid' : 'unpaid') + '">' + (r.paid || '未付') + '</span>' +
-                        '<select class="inline-select pay-edit" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:90%;" onchange="markRowDirty(' + r.id + ');saveIfDirty(' + r.id + ')" onclick="event.stopPropagation()">' +
+                        '<select class="inline-select pay-edit" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:90%;" onchange="markRowDirty(' + r.id + ')" onclick="event.stopPropagation()">' +
                             '<option value="" ' + (r.paid ? '' : 'selected') + '>未付</option>' +
                             '<option value="已付" ' + (r.paid ? 'selected' : '') + '>已付</option>' +
                         '</select>' +
                     '</td>' +
                     '<td style="position:relative;" onmouseenter="showEdit(this)" onmouseleave="hideEdit(this)" onclick="mobileEditCell(this)">' +
                         '<span class="method-display">' + esc(r.method) + '</span>' +
-                        '<select class="inline-select method-edit" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:90%;" onchange="var payRow=this.closest(\'tr\').querySelector(\'.pay-edit\');if(payRow)payRow.value=this.value?\'已付\':\'\';markRowDirty(' + r.id + ');saveIfDirty(' + r.id + ')" onclick="event.stopPropagation()">' +
+                        '<select class="inline-select method-edit" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:90%;" onchange="var payRow=this.closest(\'tr\').querySelector(\'.pay-edit\');if(payRow)payRow.value=this.value?\'已付\':\'\';markRowDirty(' + r.id + ')" onclick="event.stopPropagation()">' +
                             '<option value="" ' + (r.method ? '' : 'selected') + '></option>' +
                             '<option value="微信" ' + (r.method == '微信' ? 'selected' : '') + '>微信</option>' +
                             '<option value="支付宝" ' + (r.method == '支付宝' ? 'selected' : '') + '>支付宝</option>' +
@@ -1147,7 +1148,13 @@
             }
             // 关闭其他已打开的编辑
             document.querySelectorAll('.mobile-active').forEach(c => {
-                if (c !== cell) c.classList.remove('mobile-active');
+                if (c !== cell) {
+                    c.classList.remove('mobile-active');
+                    const otherInput = c.querySelector('.select-edit, .pay-edit, .method-edit');
+                    const otherSpan = c.querySelector('span');
+                    if (otherInput) otherInput.style.display = '';
+                    if (otherSpan) otherSpan.style.display = '';
+                }
             });
             cell.classList.toggle('mobile-active');
             // 自动聚焦输入框或选择框
@@ -1454,11 +1461,11 @@
             });
         }
 
-        window.onclick = e => {
+        window.addEventListener('click', function(e) {
             if (e.target === document.getElementById('billModal')) closeModal();
             if (e.target === document.getElementById('chartModal')) closeChartModal();
             if (e.target === document.getElementById('profileModal')) closeProfileModal();
-        };
+        });
 
         // 拖动弹窗（支持多个弹窗）
         let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0, activeContent = null;
@@ -1510,11 +1517,19 @@
             }
         }
 
+        function escapeCSV(v) {
+            var s = String(v);
+            if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+                return '"' + s.replace(/"/g, '""') + '"';
+            }
+            return s;
+        }
+
         function manualBackup() {
             let csv = '序号,日期,客户名称,项目,单价,数量,总价,付款情况,付款方式,备注\n';
             records.forEach(r => {
                 const row = [r.seq, r.date, r.name, r.project, r.price, r.qty, r.total, r.paid || '未付', r.method || '', r.remark || '']
-                    .map(v => String(v).includes(',') ? '"' + v + '"' : v).join(',');
+                    .map(escapeCSV).join(',');
                 csv += row + '\n';
             });
             const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1624,7 +1639,7 @@
                 filtered.forEach(r => {
                     runningQty += r.qty; runningTotal += r.total;
                     const row = [r.seq, r.date, r.name, r.project, r.price, r.qty, r.total, r.paid || '', r.method || '', r.remark || '', runningQty, runningTotal]
-                        .map(v => String(v).includes(',') ? '"' + v + '"' : v).join(',');
+                        .map(escapeCSV).join(',');
                     csv += row + '\n';
                 });
                 const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1653,6 +1668,9 @@
 
         function closeChartModal() {
             document.getElementById('chartModal').style.display = 'none';
+            var mc = document.querySelector('#chartModal .modal-content');
+            if (mc) mc.style.transform = '';
+            xOffset = 0; yOffset = 0;
         }
 
         // ===== 客户档案 =====
@@ -1672,9 +1690,9 @@
             '</div>';
 
             html += '<div class="profile-filter" id="profileFilterBtns">' +
-                '<button class="btn-filter active" onclick="filterProfileRecords(\'' + esc(name).replace(/'/g, "\\'") + '\', \'\', this)">全部</button>' +
-                '<button class="btn-filter" onclick="filterProfileRecords(\'' + esc(name).replace(/'/g, "\\'") + '\', \'unpaid\', this)">仅未结账</button>' +
-                '<button class="btn-filter" onclick="filterProfileRecords(\'' + esc(name).replace(/'/g, "\\'") + '\', \'paid\', this)">仅已结账</button>' +
+                '<button class="btn-filter active" onclick="filterProfileRecords(this.dataset.name, \'\', this)" data-name="' + esc(name) + '">全部</button>' +
+                '<button class="btn-filter" onclick="filterProfileRecords(this.dataset.name, \'unpaid\', this)" data-name="' + esc(name) + '">仅未结账</button>' +
+                '<button class="btn-filter" onclick="filterProfileRecords(this.dataset.name, \'paid\', this)" data-name="' + esc(name) + '">仅已结账</button>' +
             '</div>';
 
             html += '<div class="profile-table-wrap"><table class="profile-table"><thead><tr>' +
@@ -1714,6 +1732,9 @@
 
         function closeProfileModal() {
             document.getElementById('profileModal').style.display = 'none';
+            var mc = document.querySelector('#profileModal .modal-content');
+            if (mc) mc.style.transform = '';
+            xOffset = 0; yOffset = 0;
         }
 
         function renderCharts() {
@@ -1838,7 +1859,7 @@
 
         // Enter键添加记录
         document.querySelectorAll('.input-group input').forEach(input => {
-            input.addEventListener('keypress', e => { if (e.key === 'Enter') addRecord(); });
+            input.addEventListener('keydown', e => { if (e.key === 'Enter') addRecord(); });
         });
 
         // FIX: 全局快捷键 - 输入框内不拦截 Ctrl+Z
@@ -1889,7 +1910,13 @@
         // 点击页面其他区域关闭移动端编辑
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.edit-cell')) {
-                document.querySelectorAll('.edit-cell.mobile-active').forEach(c => c.classList.remove('mobile-active'));
+                document.querySelectorAll('.edit-cell.mobile-active').forEach(c => {
+                    c.classList.remove('mobile-active');
+                    const inp = c.querySelector('.select-edit, .pay-edit, .method-edit');
+                    const sp = c.querySelector('span');
+                    if (inp) inp.style.display = '';
+                    if (sp) sp.style.display = '';
+                });
             }
         });
 

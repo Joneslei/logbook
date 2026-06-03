@@ -213,13 +213,8 @@
         }
         .edit-cell.mobile-active .text-display { display: none; }
         .edit-cell.mobile-active .select-edit { display: inline-block; position: static; transform: none; width: 100%; }
-        /* 付款和方式的 hover 编辑 */
-        td[style*="position:relative"]:hover .pay-display { display: none; }
-        td[style*="position:relative"]:hover .pay-edit { display: inline-block; }
-        td[style*="position:relative"]:hover .method-display { display: none; }
-        td[style*="position:relative"]:hover .method-edit { display: inline-block; }
         /* 编辑模式 */
-        tr.editing .edit-cell .text-display { visibility: hidden; }
+        tr.editing .edit-cell .text-display { display: none; }
         tr.editing .edit-cell .select-edit { display: inline-block; }
         tr.editing .profile-btn { display: none; }
         tr.editing .edit-btn { display: none; }
@@ -412,6 +407,7 @@
         .loading-spinner { width: 40px; height: 40px; border: 3px solid var(--color-border-light); border-top-color: var(--color-primary); border-radius: 50%; animation: spin .8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loading-text { margin-top: 12px; font-size: 14px; color: var(--color-text-secondary); }
+        .pull-refresh-spinner { width: 18px; height: 18px; border: 2px solid var(--color-border-light); border-top-color: var(--color-primary); border-radius: 50%; animation: spin .8s linear infinite; }
 
         .login-overlay { position: fixed; inset: 0; background: var(--color-bg); display: flex; align-items: center; justify-content: center; z-index: 20000; }
         .login-box { background: var(--color-bg-card); border-radius: 16px; padding: 44px 40px; width: 360px; max-width: 90vw; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.08); text-align: center; }
