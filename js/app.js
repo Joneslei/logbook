@@ -1180,8 +1180,8 @@
             const isEditing = row.classList.toggle('editing');
 
             if (isEditing) {
-                btn.textContent = '💾';
-                btn.title = '保存';
+                // 添加编辑模式标记
+                document.body.classList.add('editing-mode');
                 // 只显示客户名称、项目、单价、数量、备注的编辑框
                 row.querySelectorAll('.edit-cell').forEach(cell => {
                     const display = cell.querySelector('.text-display');
@@ -1189,9 +1189,21 @@
                     if (display) display.style.display = 'none';
                     if (input) input.style.display = 'inline-block';
                 });
+                // 标记当前编辑行
+                document.querySelectorAll('tr.editing').forEach(tr => {
+                    if (tr !== row) {
+                        tr.classList.remove('editing');
+                        tr.querySelectorAll('.edit-cell').forEach(cell => {
+                            const display = cell.querySelector('.text-display');
+                            const input = cell.querySelector('.select-edit');
+                            if (display) display.style.display = '';
+                            if (input) input.style.display = 'none';
+                        });
+                    }
+                });
             } else {
-                btn.textContent = '✏️';
-                btn.title = '编辑';
+                // 移除编辑模式标记
+                document.body.classList.remove('editing-mode');
                 // 隐藏所有编辑框
                 row.querySelectorAll('.edit-cell').forEach(cell => {
                     const display = cell.querySelector('.text-display');
@@ -1203,6 +1215,24 @@
                 saveIfDirty(id);
             }
         }
+
+        // 点击空白区域自动退出编辑
+        document.addEventListener('click', function(e) {
+            const editingRow = document.querySelector('tr.editing');
+            if (editingRow && !e.target.closest('tr.editing') && !e.target.closest('.edit-btn')) {
+                const id = editingRow.querySelector('.row-checkbox')?.dataset.id;
+                editingRow.classList.remove('editing');
+                // 移除编辑模式标记
+                document.body.classList.remove('editing-mode');
+                editingRow.querySelectorAll('.edit-cell').forEach(cell => {
+                    const display = cell.querySelector('.text-display');
+                    const input = cell.querySelector('.select-edit');
+                    if (display) display.style.display = '';
+                    if (input) input.style.display = 'none';
+                });
+                if (id) saveIfDirty(parseInt(id));
+            }
+        });
 
         // ===== 全选/批量 =====
 
