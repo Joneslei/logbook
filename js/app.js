@@ -586,8 +586,9 @@
         // ===== 数据操作 =====
 
         // 输入验证
-        function validateInput(name, project, price, qty) {
+        function validateInput(date, name, project, price, qty) {
             const errors = [];
+            if (!date) errors.push('日期');
             if (!name) errors.push('客户名称');
             if (!project) errors.push('项目');
             if (isNaN(price)) errors.push('单价');
@@ -620,7 +621,7 @@
             // 选了付款方式就自动标记为已付
             if (method) paid = '已付';
 
-            const errors = validateInput(name, project, price, qty);
+            const errors = validateInput(date, name, project, price, qty);
             if (errors.length > 0) {
                 showToast('请填写：' + errors.join('、'), 'warning');
                 const invalidIds = [];
@@ -671,21 +672,21 @@
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.name = value.trim();
-            saveData(); saveToCloud(records, true); updateCustomerFilter();
+            invalidateFilterCache(); saveData(); saveToCloud(records, true); updateCustomerFilter(); batchRender();
         }
 
         function updateProject(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.project = value.trim();
-            saveData(); saveToCloud(records, true);
+            invalidateFilterCache(); saveData(); saveToCloud(records, true); batchRender();
         }
 
         function updateRemark(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.remark = value.trim();
-            saveData(); saveToCloud(records, true);
+            invalidateFilterCache(); saveData(); saveToCloud(records, true); batchRender();
         }
 
         function updateQty(id, value) {
@@ -935,8 +936,8 @@
             if (!sel) return;
             let minDate = new Date();
             if (records.length) {
-                const dates = records.map(r => r.date).sort();
-                minDate = new Date(dates[0]);
+                const dates = records.map(r => r.date).filter(d => d).sort();
+                if (dates.length) minDate = new Date(dates[0]);
             }
             const now = new Date();
             let y = minDate.getFullYear(), m = minDate.getMonth() + 1;
@@ -1094,6 +1095,7 @@
             });
 
             input.addEventListener('focus', function() {
+                _suggestIdx = -1;
                 if (!this.value.trim()) {
                     const items = dataFn();
                     if (items.length) {
@@ -1282,6 +1284,7 @@
                     else { r.paid = ''; r.method = ''; }
                 }
             });
+            invalidateFilterCache();
             saveData();
             saveToCloud(records, true);
             batchRender();
@@ -1486,6 +1489,7 @@
 
         setupModalDrag('billModal');
         setupModalDrag('chartModal');
+        setupModalDrag('profileModal');
 
         document.addEventListener('mouseup', () => { initialX = currentX; initialY = currentY; isDragging = false; activeContent = null; });
         document.addEventListener('mousemove', e => {
@@ -1571,6 +1575,7 @@
                         records = records.concat(newRecords);
                     }
                     recalcSeq();
+                    invalidateFilterCache();
                     saveData(); saveToCloud(records, true); updateCustomerFilter(); batchRender();
                     showToast('恢复成功！共 ' + newRecords.length + ' 条记录', 'success');
                 } else { showToast('没有找到有效的记录！', 'error'); }
@@ -1604,6 +1609,7 @@
                 records = [];
                 deletedStack = [];
                 saveUndoStack();
+                invalidateFilterCache();
                 saveData(); saveToCloud(records, true); updateCustomerFilter(); batchRender();
                 showToast('已清空所有记录', 'info');
             }
