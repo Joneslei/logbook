@@ -45,6 +45,11 @@
                 errEl.textContent = '登录尝试次数过多，请等待 ' + remaining + ' 秒';
                 return;
             }
+            // 锁定过期后重置计数器
+            if (loginLockoutUntil && Date.now() >= loginLockoutUntil) {
+                loginAttempts = 0;
+                loginLockoutUntil = 0;
+            }
 
             const hash = await sha256(input.value);
             if (hash === PASSWORD_HASH) {
