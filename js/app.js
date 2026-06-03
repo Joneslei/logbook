@@ -1002,7 +1002,7 @@
                     '<td>' + r.seq + '</td>' +
                     '<td>' + esc(r.date) + '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
-                        '<span class="text-display"><span class="customer-link" onclick="event.stopPropagation();showCustomerProfile(\'' + esc(r.name).replace(/'/g, "\\'") + '\')">' + esc(r.name) + '</span></span>' +
+                        '<span class="text-display">' + esc(r.name) + ' <span class="customer-link" onclick="event.stopPropagation();showCustomerProfile(\'' + esc(r.name).replace(/'/g, "\\'") + '\')" title="查看档案">📋</span></span>' +
                         '<input type="text" class="inline-select select-edit" value="' + esc(r.name) + '" onchange="updateName(' + r.id + ', this.value)">' +
                     '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
@@ -1279,12 +1279,7 @@
                 }
             }
             html += '<div style="position:relative;z-index:1;">';
-            // 店铺头部
-            html += '<div class="bill-shop-header">' +
-                '<img src="LOGO.png" alt="" class="bill-shop-logo">' +
-                '<div class="bill-shop-name">蒋故事手机维修</div>' +
-            '</div>';
-            html += '<div class="bill-title">' + esc(billTypeLabel) + '</div>';
+            html += '<div class="bill-title">📋 ' + esc(billTypeLabel) + '</div>';
             html += '<div class="bill-info">' +
                 '<div><span class="bill-info-label">客户：</span><span class="bill-info-value">' + esc(customers.join('、')) + '</span></div>' +
                 '<div><span class="bill-info-label">日期：</span><span class="bill-info-value">' + esc(today) + '</span></div>' +

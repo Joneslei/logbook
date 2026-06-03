@@ -443,8 +443,8 @@
         .profile-table-wrap { max-height: 350px; overflow-y: auto; }
         .profile-filter { display: flex; gap: 8px; margin-bottom: 12px; }
         .profile-filter .btn-filter { padding: 6px 12px; font-size: 12px; }
-        .customer-link { color: var(--color-primary); cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
-        .customer-link:hover { color: var(--color-primary-dark); }
+        .customer-link { cursor: pointer; font-size: 13px; opacity: 0.5; transition: opacity .15s; }
+        .customer-link:hover { opacity: 1; }
 
         /* 图表弹窗 */
         .chart-modal-content { max-width: 850px; }
