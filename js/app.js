@@ -1434,10 +1434,30 @@
                     onclone: function(doc) { var c = doc.querySelector('.bill-card'); if (c) { c.style.padding = '20px'; c.style.background = '#fff'; } }
                 });
                 const blob = await new Promise(function(resolve) { canvas.toBlob(resolve, 'image/png'); });
-                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                showToast('图片已复制，可直接粘贴到微信！', 'success');
+                // 优先尝试剪贴板API（桌面端）
+                if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+                    try {
+                        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                        showToast('图片已复制，可直接粘贴到微信！', 'success');
+                        btn.textContent = '📱 复制图片发微信'; btn.disabled = false;
+                        return;
+                    } catch (e) { /* 剪贴板不支持，继续尝试分享 */ }
+                }
+                // 手机端尝试Web Share API（可直接分享到微信）
+                var file = new File([blob], '账单.png', { type: 'image/png' });
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: '客户账单' });
+                    showToast('分享成功！', 'success');
+                } else {
+                    // 降级：下载图片
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url; a.download = '账单.png';
+                    a.click(); URL.revokeObjectURL(url);
+                    showToast('图片已下载，请手动发送到微信', 'info');
+                }
             } catch (err) {
-                showToast('复制失败，请用「导出图片」保存后发送', 'warning');
+                showToast('操作失败，请用「导出图片」保存后发送', 'warning');
             }
             btn.textContent = '📱 复制图片发微信';
             btn.disabled = false;
