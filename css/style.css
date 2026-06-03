@@ -219,8 +219,8 @@
         td[style*="position:relative"]:hover .method-display { display: none; }
         td[style*="position:relative"]:hover .method-edit { display: inline-block; }
         /* 编辑模式 */
-        tr.editing .edit-cell .text-display { display: none; }
-        tr.editing .edit-cell .select-edit { display: inline-block; position: static; transform: none; width: 100%; }
+        tr.editing .edit-cell .text-display { visibility: hidden; }
+        tr.editing .edit-cell .select-edit { display: inline-block; }
         tr.editing .profile-btn { display: none; }
         tr.editing .edit-btn { display: none; }
         /* 编辑模式下隐藏所有编辑按钮 */
