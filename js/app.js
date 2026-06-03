@@ -971,7 +971,7 @@
                     '<td>' + r.seq + '</td>' +
                     '<td>' + esc(r.date) + '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
-                        '<span class="text-display">' + esc(r.name) + '</span>' +
+                        '<span class="text-display"><span class="customer-link" onclick="event.stopPropagation();showCustomerProfile(\'' + esc(r.name).replace(/'/g, "\\'") + '\')">' + esc(r.name) + '</span></span>' +
                         '<input type="text" class="inline-select select-edit" value="' + esc(r.name) + '" onchange="updateName(' + r.id + ', this.value)">' +
                     '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
@@ -1338,6 +1338,7 @@
         window.onclick = e => {
             if (e.target === document.getElementById('billModal')) closeModal();
             if (e.target === document.getElementById('chartModal')) closeChartModal();
+            if (e.target === document.getElementById('profileModal')) closeProfileModal();
         };
 
         // 拖动弹窗（支持多个弹窗）
@@ -1534,6 +1535,67 @@
             document.getElementById('chartModal').style.display = 'none';
         }
 
+        // ===== 客户档案 =====
+        function showCustomerProfile(name) {
+            const customerRecords = records.filter(function(r) { return r.name === name; }).sort(function(a, b) { return b.date.localeCompare(a.date); });
+            if (!customerRecords.length) { showToast('未找到该客户的记录', 'info'); return; }
+
+            const totalSpent = customerRecords.reduce(function(s, r) { return s + r.total; }, 0);
+            const unpaidAmount = customerRecords.filter(function(r) { return !r.paid; }).reduce(function(s, r) { return s + r.total; }, 0);
+            const paidCount = customerRecords.filter(function(r) { return r.paid; }).length;
+
+            let html = '<div class="profile-summary">' +
+                '<div class="profile-stat"><div class="profile-stat-value">' + customerRecords.length + '</div><div class="profile-stat-label">总记录</div></div>' +
+                '<div class="profile-stat"><div class="profile-stat-value">¥' + totalSpent + '</div><div class="profile-stat-label">累计消费</div></div>' +
+                '<div class="profile-stat"><div class="profile-stat-value">¥' + unpaidAmount + '</div><div class="profile-stat-label">未结账</div></div>' +
+                '<div class="profile-stat"><div class="profile-stat-value">' + paidCount + '</div><div class="profile-stat-label">已结账</div></div>' +
+            '</div>';
+
+            html += '<div class="profile-filter">' +
+                '<button class="btn-filter btn-blue active" onclick="filterProfileRecords(\'' + esc(name).replace(/'/g, "\\'") + '\', \'\', this)">全部</button>' +
+                '<button class="btn-filter" onclick="filterProfileRecords(\'' + esc(name).replace(/'/g, "\\'") + '\', \'unpaid\', this)">仅未结账</button>' +
+                '<button class="btn-filter" onclick="filterProfileRecords(\'' + esc(name).replace(/'/g, "\\'") + '\', \'paid\', this)">仅已结账</button>' +
+            '</div>';
+
+            html += '<div class="profile-table-wrap"><table class="profile-table"><thead><tr>' +
+                '<th>日期</th><th>项目</th><th>单价</th><th>数量</th><th>总价</th><th>状态</th>' +
+            '</tr></thead><tbody id="profileTableBody">';
+
+            html += buildProfileRows(customerRecords, '');
+
+            html += '</tbody></table></div>';
+
+            document.getElementById('profileTitle').textContent = '📋 ' + name + ' 的档案';
+            document.getElementById('profileContent').innerHTML = html;
+            document.getElementById('profileModal').style.display = 'block';
+        }
+
+        function buildProfileRows(records, filter) {
+            var filtered = filter ? records.filter(function(r) { return filter === 'paid' ? r.paid : !r.paid; }) : records;
+            if (!filtered.length) return '<tr><td colspan="6" style="color:var(--color-text-light);padding:20px;">暂无记录</td></tr>';
+            return filtered.map(function(r) {
+                return '<tr>' +
+                    '<td>' + esc(r.date) + '</td>' +
+                    '<td>' + esc(r.project) + '</td>' +
+                    '<td>¥' + r.price + '</td>' +
+                    '<td>' + r.qty + '</td>' +
+                    '<td style="font-weight:600;">¥' + r.total + '</td>' +
+                    '<td class="' + (r.paid ? 'paid' : 'unpaid') + '">' + (r.paid || '未付') + '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        function filterProfileRecords(name, filter, btn) {
+            var customerRecords = records.filter(function(r) { return r.name === name; }).sort(function(a, b) { return b.date.localeCompare(a.date); });
+            document.getElementById('profileTableBody').innerHTML = buildProfileRows(customerRecords, filter);
+            btn.parentElement.querySelectorAll('.btn-filter').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').style.display = 'none';
+        }
+
         function renderCharts() {
             const filtered = getFilteredRecords();
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -1627,7 +1689,7 @@
             if (e.ctrlKey && e.key === 's') { e.preventDefault(); manualBackup(); showToast('正在下载备份...', 'info'); }
 
             // Esc - 关闭弹窗
-            if (e.key === 'Escape') { closeModal(); closeChartModal(); }
+            if (e.key === 'Escape') { closeModal(); closeChartModal(); closeProfileModal(); }
 
             // Ctrl+N - 新增记录（聚焦到输入区）
             if (e.ctrlKey && e.key === 'n' && !isInput) {
