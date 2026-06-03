@@ -1521,6 +1521,7 @@
         let monthlyChartInstance = null;
         let paidChartInstance = null;
         let customerChartInstance = null;
+        let projectChartInstance = null;
 
         function showChart() {
             if (typeof Chart === 'undefined') {
@@ -1602,15 +1603,36 @@
             const textColor = isDark ? '#c9cdd4' : '#374151';
             const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
 
-            // 1. 月度收支趋势图
+            // 0. 月度数据 + 环比分析
             const monthMap = {};
             filtered.forEach(r => {
                 const month = r.date.substring(0, 7);
-                if (!monthMap[month]) monthMap[month] = { paid: 0, unpaid: 0 };
+                if (!monthMap[month]) monthMap[month] = { paid: 0, unpaid: 0, total: 0 };
                 if (r.paid) monthMap[month].paid += r.total;
                 else monthMap[month].unpaid += r.total;
+                monthMap[month].total += r.total;
             });
             const months = Object.keys(monthMap).sort();
+
+            // 数据摘要
+            const now = new Date();
+            const thisMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            const lastMonth = now.getMonth() === 0 ? (now.getFullYear() - 1) + '-12' : now.getFullYear() + '-' + String(now.getMonth()).padStart(2, '0');
+            const thisData = monthMap[thisMonth] || { total: 0, paid: 0 };
+            const lastData = monthMap[lastMonth] || { total: 0, paid: 0 };
+            const pct = lastData.total > 0 ? Math.round((thisData.total - lastData.total) / lastData.total * 100) : (thisData.total > 0 ? 100 : 0);
+            const uniqueCustomers = new Set(filtered.map(r => r.name)).size;
+            const avgPerCustomer = uniqueCustomers > 0 ? Math.round(filtered.reduce((s, r) => s + r.total, 0) / uniqueCustomers) : 0;
+
+            let summaryHtml = '<div class="chart-summary-item"><div class="chart-summary-value">¥' + thisData.total + '</div><div class="chart-summary-label">本月收入</div>';
+            if (lastData.total > 0) summaryHtml += '<div class="chart-summary-change ' + (pct >= 0 ? 'up' : 'down') + '">' + (pct >= 0 ? '↑' : '↓') + Math.abs(pct) + '% 环比上月</div>';
+            summaryHtml += '</div>';
+            summaryHtml += '<div class="chart-summary-item"><div class="chart-summary-value">¥' + thisData.paid + '</div><div class="chart-summary-label">本月已结账</div></div>';
+            summaryHtml += '<div class="chart-summary-item"><div class="chart-summary-value">' + filtered.length + '</div><div class="chart-summary-label">总记录数</div></div>';
+            summaryHtml += '<div class="chart-summary-item"><div class="chart-summary-value">¥' + avgPerCustomer + '</div><div class="chart-summary-label">客均消费</div></div>';
+            document.getElementById('chartSummary').innerHTML = summaryHtml;
+
+            // 1. 月度收支趋势图
             const paidData = months.map(m => monthMap[m].paid);
             const unpaidData = months.map(m => monthMap[m].unpaid);
 
@@ -1654,19 +1676,42 @@
                 if (!customerMap[r.name]) customerMap[r.name] = 0;
                 customerMap[r.name] += r.total;
             });
-            const sorted = Object.entries(customerMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            const sortedCustomers = Object.entries(customerMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
 
             if (customerChartInstance) customerChartInstance.destroy();
             customerChartInstance = new Chart(document.getElementById('customerChart'), {
                 type: 'bar',
                 data: {
-                    labels: sorted.map(s => s[0]),
-                    datasets: [{ label: '消费金额', data: sorted.map(s => s[1]), backgroundColor: 'rgba(37,99,235,0.7)' }]
+                    labels: sortedCustomers.map(s => s[0]),
+                    datasets: [{ label: '消费金额', data: sortedCustomers.map(s => s[1]), backgroundColor: 'rgba(37,99,235,0.7)' }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     indexAxis: 'y',
                     plugins: { title: { display: true, text: '客户消费排名（Top 10）', color: textColor }, legend: { labels: { color: textColor } } },
+                    scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } }
+                }
+            });
+
+            // 4. 维修项目收入排名
+            const projectMap = {};
+            filtered.forEach(r => {
+                if (!projectMap[r.project]) projectMap[r.project] = 0;
+                projectMap[r.project] += r.total;
+            });
+            const sortedProjects = Object.entries(projectMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+            if (projectChartInstance) projectChartInstance.destroy();
+            projectChartInstance = new Chart(document.getElementById('projectChart'), {
+                type: 'bar',
+                data: {
+                    labels: sortedProjects.map(s => s[0].length > 12 ? s[0].substring(0, 12) + '…' : s[0]),
+                    datasets: [{ label: '收入', data: sortedProjects.map(s => s[1]), backgroundColor: 'rgba(168,85,247,0.7)' }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { title: { display: true, text: '维修项目收入（Top 10）', color: textColor }, legend: { labels: { color: textColor } } },
                     scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } }
                 }
             });
