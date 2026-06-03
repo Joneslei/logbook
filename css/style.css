@@ -211,16 +211,28 @@
             z-index: 10; width: 85%; min-width: 60px; padding: 4px 6px;
             border: 1.5px solid var(--color-primary); border-radius: 6px; font-size: 12px; background: var(--color-bg-card);
         }
-        .edit-cell:hover .text-display { visibility: hidden; }
-        .edit-cell:hover .select-edit { display: inline-block; }
         .edit-cell.mobile-active .text-display { display: none; }
         .edit-cell.mobile-active .select-edit { display: inline-block; position: static; transform: none; width: 100%; }
+        /* 付款和方式的 hover 编辑 */
+        td[style*="position:relative"]:hover .pay-display { display: none; }
+        td[style*="position:relative"]:hover .pay-edit { display: inline-block; }
+        td[style*="position:relative"]:hover .method-display { display: none; }
+        td[style*="position:relative"]:hover .method-edit { display: inline-block; }
+        /* 编辑模式 */
+        tr.editing .edit-cell .text-display { display: none; }
+        tr.editing .edit-cell .select-edit { display: inline-block; position: static; transform: none; width: 100%; }
+        tr.editing .profile-btn { display: none; }
         .inline-select { padding: 3px 6px; font-size: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg-card); }
         .profile-btn {
             background: var(--color-bg-card); color: var(--color-primary); border: 1px solid var(--color-primary); padding: 5px 10px;
             border-radius: 8px; cursor: pointer; font-size: 12px; transition: all .15s;
         }
         .profile-btn:hover { background: var(--color-primary); color: var(--color-bg-card); }
+        .edit-btn {
+            background: var(--color-bg-card); color: var(--color-warning); border: 1px solid var(--color-warning); padding: 5px 10px;
+            border-radius: 8px; cursor: pointer; font-size: 12px; transition: all .15s;
+        }
+        .edit-btn:hover { background: var(--color-warning); color: var(--color-bg-card); }
         .delete-btn {
             background: var(--color-bg-card); color: var(--color-danger); border: 1px solid var(--color-danger); padding: 5px 14px;
             border-radius: 8px; cursor: pointer; font-size: 12px; transition: all .15s; font-weight: 500;
@@ -437,16 +449,15 @@
         .hidden { display: none !important; }
 
         /* 客户档案弹窗 */
-        .profile-modal-content { max-width: 95vw; padding: 16px; }
+        .profile-modal-content { max-width: 95vw; width: 700px; padding: 20px; }
         .profile-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
         .profile-stat { text-align: center; padding: 10px 6px; background: var(--color-bg-hover); border-radius: 8px; border: 1px solid var(--color-border-light); }
         .profile-stat-value { font-size: 18px; font-weight: 700; color: var(--color-primary); }
         .profile-stat-label { font-size: 10px; color: var(--color-text-secondary); margin-top: 2px; }
-        .profile-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .profile-table th { background: var(--color-bg-hover); padding: 6px 4px; text-align: center; font-size: 11px; color: var(--color-text-secondary); position: sticky; top: 0; }
-        .profile-table td { padding: 5px 4px; text-align: center; border-bottom: 1px solid var(--color-bg); }
-        .profile-table td:nth-child(1) { white-space: nowrap; }
-        .profile-table td:nth-child(2) { text-align: left; word-break: break-all; }
+        .profile-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 0; }
+        .profile-table th { background: var(--color-bg-hover); padding: 5px 3px; text-align: center; font-size: 10px; color: var(--color-text-secondary); position: sticky; top: 0; }
+        .profile-table td { padding: 4px 3px; text-align: center; border-bottom: 1px solid var(--color-bg); white-space: nowrap; }
+        .profile-table td:nth-child(2) { text-align: center; white-space: normal; word-break: break-all; }
         .profile-table-wrap { max-height: 55vh; overflow-y: auto; }
         .profile-filter { display: flex; gap: 6px; margin-bottom: 10px; }
         .profile-filter .btn-filter { padding: 5px 10px; font-size: 11px; }

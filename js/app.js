@@ -1004,6 +1004,7 @@
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
                         '<span class="text-display">' + esc(r.name) + '</span>' +
                         '<input type="text" class="inline-select select-edit" value="' + esc(r.name) + '" onchange="updateName(' + r.id + ', this.value)">' +
+                        '<button class="profile-btn" onclick="event.stopPropagation();showCustomerProfile(\'' + esc(r.name).replace(/'/g, "\\'") + '\')" title="客户档案" style="margin-left:4px;font-size:10px;padding:2px 6px;">👤</button>' +
                     '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
                         '<span class="text-display">' + esc(r.project) + '</span>' +
@@ -1040,7 +1041,7 @@
                         '<span class="text-display">' + esc(r.remark || '') + '</span>' +
                         '<input type="text" class="inline-select select-edit" value="' + esc(r.remark || '') + '" onchange="updateRemark(' + r.id + ', this.value)">' +
                     '</td>' +
-                    '<td><button class="profile-btn" onclick="showCustomerProfile(\'' + esc(r.name).replace(/'/g, "\\'") + '\')" title="客户档案">👤</button> <button class="delete-btn" onclick="deleteRecord(' + r.id + ')">删除</button></td>';
+                    '<td><button class="edit-btn" onclick="toggleEditMode(this, ' + r.id + ')" title="编辑">✏️</button> <button class="delete-btn" onclick="deleteRecord(' + r.id + ')">删除</button></td>';
                 fragment.appendChild(tr);
             });
 
@@ -1171,6 +1172,36 @@
             const select = cell.querySelector('select');
             if (display) display.style.display = 'inline-block';
             if (select) select.style.display = 'none';
+        }
+
+        // 切换编辑模式
+        function toggleEditMode(btn, id) {
+            const row = btn.closest('tr');
+            const isEditing = row.classList.toggle('editing');
+
+            if (isEditing) {
+                btn.textContent = '💾';
+                btn.title = '保存';
+                // 只显示客户名称、项目、单价、数量、备注的编辑框
+                row.querySelectorAll('.edit-cell').forEach(cell => {
+                    const display = cell.querySelector('.text-display');
+                    const input = cell.querySelector('.select-edit');
+                    if (display) display.style.display = 'none';
+                    if (input) input.style.display = 'inline-block';
+                });
+            } else {
+                btn.textContent = '✏️';
+                btn.title = '编辑';
+                // 隐藏所有编辑框
+                row.querySelectorAll('.edit-cell').forEach(cell => {
+                    const display = cell.querySelector('.text-display');
+                    const input = cell.querySelector('.select-edit');
+                    if (display) display.style.display = '';
+                    if (input) input.style.display = 'none';
+                });
+                // 保存所有更改
+                saveIfDirty(id);
+            }
         }
 
         // ===== 全选/批量 =====
