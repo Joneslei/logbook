@@ -350,7 +350,7 @@
         // ===== 全局状态 =====
         let records = [];
         let _idCounter = 0;
-        function genId() { return Date.now() * 10000 + (++_idCounter); }
+        function genId() { return Date.now() * 1000 + (++_idCounter); }
         let currentFilter = { customers: [], paid: '', dateFrom: '', dateTo: '', keyword: '' };
         const dirtyRows = new Set();
 
@@ -1303,7 +1303,8 @@
             const payStatus = document.getElementById('batchPayStatus').value;
             const payMethod = document.getElementById('batchPayMethod').value;
             const statusText = payStatus ? '已付' : '未付';
-            if (!confirm('确定将选中的 ' + checked.length + ' 条记录改为「' + statusText + ' - ' + payMethod + '」？')) return;
+            const confirmMsg = payStatus ? '确定将选中的 ' + checked.length + ' 条记录改为「' + statusText + ' - ' + payMethod + '」？' : '确定将选中的 ' + checked.length + ' 条记录改为「未付」（清空付款方式）？';
+            if (!confirm(confirmMsg)) return;
 
             checked.forEach(cb => {
                 const r = records.find(r => r.id === parseInt(cb.getAttribute('data-id')));
@@ -1440,6 +1441,7 @@
         }
 
         async function copyBillImage() {
+            if (typeof html2canvas === 'undefined') { showToast('图片库加载失败，请刷新页面重试', 'error'); return; }
             const billEl = document.getElementById('billContent').querySelector('.bill-card');
             if (!billEl) { showToast('没有可导出的账单！', 'warning'); return; }
             const btn = document.querySelector('.btn-clipboard');
@@ -1533,6 +1535,7 @@
         }
 
         function exportBillAsImage(e) {
+            if (typeof html2canvas === 'undefined') { showToast('图片库加载失败，请刷新页面重试', 'error'); return; }
             const billEl = document.getElementById('billContent').querySelector('.bill-card');
             if (!billEl) { showToast('没有可导出的账单！', 'warning'); return; }
             const btn = e ? e.target : document.querySelector('.btn-export-img');
@@ -1648,7 +1651,7 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = e => {
-                const lines = e.target.result.split('\n').filter(l => l.trim());
+                const lines = e.target.result.replace(/\r\n/g, '\n').split('\n').filter(l => l.trim());
                 const newRecords = [];
                 for (let i = 1; i < lines.length; i++) {
                     const cols = parseCSVLine(lines[i]);
@@ -1959,9 +1962,15 @@
             });
         }
 
-        // Enter键添加记录
+        // Enter键添加记录（建议列表选中时不触发）
         document.querySelectorAll('.input-group input').forEach(input => {
-            input.addEventListener('keydown', e => { if (e.key === 'Enter') addRecord(); });
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    var suggestList = input.parentElement.querySelector('.suggest-list');
+                    if (suggestList && suggestList.classList.contains('show') && _suggestIdx >= 0) return;
+                    addRecord();
+                }
+            });
         });
 
         // FIX: 全局快捷键 - 输入框内不拦截 Ctrl+Z
