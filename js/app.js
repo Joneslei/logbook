@@ -339,6 +339,8 @@
 
         // ===== 全局状态 =====
         let records = [];
+        let _idCounter = 0;
+        function genId() { return Date.now() * 1000 + (++_idCounter % 1000); }
         let currentFilter = { customers: [], paid: '', dateFrom: '', dateTo: '', keyword: '' };
         const dirtyRows = new Set();
 
@@ -390,12 +392,14 @@
             if (!force && Date.now() - _lastCloudSync < APP_CONSTANTS.CLOUD_SYNC_INTERVAL) return;
             _lastCloudSync = Date.now();
 
+            // 快照：防止异步期间Realtime修改records导致竞态
+            const snapshot = recordsToSave.slice();
             setSyncStatus('syncing', '同步中...');
             try {
                 const resp = await fetch(sbUrl('records', '?select=id'), { headers: SB_HEADERS, signal: abortSignal(8000), cache: 'no-store' });
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
                 const existingIds = (await resp.json()).map(r => r.id);
-                const localIds = new Set(recordsToSave.map(r => r.id));
+                const localIds = new Set(snapshot.map(r => r.id));
 
                 // 增量删除
                 const toDelete = existingIds.filter(id => !localIds.has(id));
@@ -406,8 +410,8 @@
                 }
 
                 // 增量 UPSERT（分批50条）
-                for (let i = 0; i < recordsToSave.length; i += 50) {
-                    const batch = recordsToSave.slice(i, i + 50).map(function(r) {
+                for (let i = 0; i < snapshot.length; i += 50) {
+                    const batch = snapshot.slice(i, i + 50).map(function(r) {
                         return { id: r.id, seq: r.seq, date: r.date, name: r.name, project: r.project,
                                  price: r.price, qty: r.qty, total: r.total, paid: r.paid || null,
                                  method: r.method || null, remark: r.remark || null };
@@ -635,7 +639,7 @@
 
             const dayRecords = records.filter(r => r.date === date);
             records.push({
-                id: Date.now(),
+                id: genId(),
                 seq: dayRecords.length + 1,
                 date, name, project, price, qty,
                 total: price * qty,
@@ -1560,7 +1564,7 @@
                         const price = parseFloat(cols[4]) || 0;
                         const qty = parseInt(cols[5]) || 1;
                         newRecords.push({
-                            id: Date.now() + i, seq: cols[0] || '', date: cols[1] || '', name: cols[2] || '',
+                            id: genId(), seq: cols[0] || '', date: cols[1] || '', name: cols[2] || '',
                             project: cols[3] || '', price, qty,
                             total: price * qty, // FIX: 强制重新计算
                             paid: cols[7] === '未付' ? '' : cols[7], method: cols[8] || '', remark: cols[9] || ''
