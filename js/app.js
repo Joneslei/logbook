@@ -1002,7 +1002,7 @@
                     '<td>' + r.seq + '</td>' +
                     '<td>' + esc(r.date) + '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
-                        '<span class="text-display">' + esc(r.name) + ' <span class="customer-link" onclick="event.stopPropagation();showCustomerProfile(\'' + esc(r.name).replace(/'/g, "\\'") + '\')" title="查看档案">📋</span></span>' +
+                        '<span class="text-display">' + esc(r.name) + '</span>' +
                         '<input type="text" class="inline-select select-edit" value="' + esc(r.name) + '" onchange="updateName(' + r.id + ', this.value)">' +
                     '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
@@ -1040,7 +1040,7 @@
                         '<span class="text-display">' + esc(r.remark || '') + '</span>' +
                         '<input type="text" class="inline-select select-edit" value="' + esc(r.remark || '') + '" onchange="updateRemark(' + r.id + ', this.value)">' +
                     '</td>' +
-                    '<td><button class="delete-btn" onclick="deleteRecord(' + r.id + ')">删除</button></td>';
+                    '<td><button class="profile-btn" onclick="showCustomerProfile(\'' + esc(r.name).replace(/'/g, "\\'") + '\')" title="客户档案">📋</button> <button class="delete-btn" onclick="deleteRecord(' + r.id + ')">删除</button></td>';
                 fragment.appendChild(tr);
             });
 
