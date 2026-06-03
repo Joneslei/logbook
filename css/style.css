@@ -274,12 +274,13 @@
         .bill-amount { font-size: 22px; font-weight: 700; color: var(--color-danger); text-align: center; margin-top: 12px; }
         .bill-footer { text-align: center; margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--color-border); position: relative; }
         .bill-footer-text { font-size: 13px; color: var(--color-text-secondary); }
-        .btn-copy { background: var(--color-primary); color: var(--color-bg-card); border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 14px; font-weight: 600; margin-top: 12px; transition: background .15s; }
-        .btn-copy:hover { background: var(--color-primary-dark); }
-        .btn-export-img { background: var(--color-warning); color: var(--color-bg-card); border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 14px; font-weight: 600; margin-top: 8px; transition: background .15s; }
+        .btn-copy, .btn-export-img, .btn-clipboard { border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 14px; font-weight: 600; margin-top: 10px; transition: background .15s; }
+        .btn-export-img { background: var(--color-warning); color: var(--color-bg-card); }
         .btn-export-img:hover { background: var(--color-warning-dark); }
-        .btn-clipboard { background: #07c160; color: #fff; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 14px; font-weight: 600; margin-top: 8px; transition: background .15s; }
+        .btn-clipboard { background: #07c160; color: #fff; }
         .btn-clipboard:hover { background: #06ad56; }
+        .btn-copy { background: var(--color-primary); color: var(--color-bg-card); }
+        .btn-copy:hover { background: var(--color-primary-dark); }
 
         /* 响应式 */
         @media (max-width: 768px) {
@@ -445,7 +446,6 @@
         .file-input-hidden { display: none; }
         .bill-title-style { margin: 0; font-size: 18px; color: var(--color-text); }
         .bill-content-center { text-align: center; }
-        .bill-copy-btn { margin-top: 12px; }
         .hidden { display: none !important; }
 
         /* 客户档案弹窗 */
