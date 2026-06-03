@@ -1431,7 +1431,7 @@
             btn.disabled = true;
             try {
                 const canvas = await html2canvas(billEl, { backgroundColor: '#ffffff', scale: 2, useCORS: true, allowTaint: true, scrollX: 0, scrollY: 0,
-                    onclone: function(doc) { var c = doc.querySelector('.bill-card'); if (c) { c.style.padding = '20px'; c.style.background = '#fff'; } }
+                    onclone: forceLightBillStyle
                 });
                 const blob = await new Promise(function(resolve) { canvas.toBlob(resolve, 'image/png'); });
                 // 优先尝试剪贴板API（桌面端）
@@ -1463,6 +1463,39 @@
             btn.disabled = false;
         }
 
+        // 强制账单导出为亮色模式
+        function forceLightBillStyle(clonedDoc) {
+            var c = clonedDoc.querySelector('.bill-card');
+            if (!c) return;
+            c.style.padding = '20px';
+            c.style.background = '#fff';
+            c.style.color = '#1f2937';
+            c.style.borderColor = '#e5e7eb';
+            // 所有子元素强制亮色
+            c.querySelectorAll('*').forEach(function(el) {
+                el.style.color = '#1f2937';
+                el.style.borderColor = '#e5e7eb';
+                el.style.background = el.style.background || '';
+            });
+            // 表头特殊处理
+            c.querySelectorAll('.bill-header, th').forEach(function(el) {
+                el.style.background = '#1f2937';
+                el.style.color = '#fff';
+            });
+            // 偶数行背景
+            c.querySelectorAll('.bill-item:nth-child(even)').forEach(function(el) {
+                el.style.background = '#f9fafb';
+            });
+            // 金额红色保留
+            c.querySelectorAll('.bill-item-total, .bill-amount').forEach(function(el) {
+                el.style.color = '#dc2626';
+            });
+            // 标签灰色
+            c.querySelectorAll('.bill-info-label').forEach(function(el) {
+                el.style.color = '#6b7280';
+            });
+        }
+
         function exportBillAsImage(e) {
             const billEl = document.getElementById('billContent').querySelector('.bill-card');
             if (!billEl) { showToast('没有可导出的账单！', 'warning'); return; }
@@ -1477,13 +1510,7 @@
                 allowTaint: true,
                 scrollX: 0,
                 scrollY: 0,
-                onclone: function(clonedDoc) {
-                    const clonedCard = clonedDoc.querySelector('.bill-card');
-                    if (clonedCard) {
-                        clonedCard.style.padding = '20px';
-                        clonedCard.style.background = '#fff';
-                    }
-                }
+                onclone: forceLightBillStyle
             }).then(function(canvas) {
                 const link = document.createElement('a');
                 const customer = [document.getElementById('filterCustomer1').value, document.getElementById('filterCustomer2').value].filter(v=>v).join('_') || '账单';
