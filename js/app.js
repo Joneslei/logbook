@@ -97,6 +97,8 @@
             _cloudFailCount = 0;
             setSyncStatus('online', '已连接云端');
             scheduleSave();
+            // 重启realtime通道（如果之前断开了）
+            if (!_realtimeChannel) startRealtime();
         }
 
         // 定时健康检查，断线自动重连
@@ -340,7 +342,7 @@
         // ===== 全局状态 =====
         let records = [];
         let _idCounter = 0;
-        function genId() { return Date.now() * 1000 + (++_idCounter % 1000); }
+        function genId() { return Date.now() * 10000 + (++_idCounter); }
         let currentFilter = { customers: [], paid: '', dateFrom: '', dateTo: '', keyword: '' };
         const dirtyRows = new Set();
 
@@ -432,7 +434,8 @@
 
         function abortSignal(ms) {
             const ctrl = new AbortController();
-            setTimeout(function() { ctrl.abort(); }, ms);
+            const timer = setTimeout(function() { ctrl.abort(); }, ms);
+            ctrl.signal.addEventListener('abort', function() { clearTimeout(timer); });
             return ctrl.signal;
         }
 
@@ -1158,7 +1161,7 @@
                     c.classList.remove('mobile-active');
                     const otherInput = c.querySelector('.select-edit, .pay-edit, .method-edit');
                     const otherSpan = c.querySelector('span');
-                    if (otherInput) otherInput.style.display = '';
+                    if (otherInput) otherInput.style.display = 'none';
                     if (otherSpan) otherSpan.style.display = '';
                 }
             });
@@ -1291,6 +1294,7 @@
             invalidateFilterCache();
             saveData();
             saveToCloud(records, true);
+            updateCustomerFilter();
             batchRender();
             showToast('批量修改完成！', 'success');
         }
@@ -1919,12 +1923,12 @@
 
         // 点击页面其他区域关闭移动端编辑
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('.edit-cell')) {
-                document.querySelectorAll('.edit-cell.mobile-active').forEach(c => {
+            if (!e.target.closest('.edit-cell') && !e.target.closest('td[style*="position:relative"]')) {
+                document.querySelectorAll('.mobile-active').forEach(c => {
                     c.classList.remove('mobile-active');
                     const inp = c.querySelector('.select-edit, .pay-edit, .method-edit');
                     const sp = c.querySelector('span');
-                    if (inp) inp.style.display = '';
+                    if (inp) inp.style.display = 'none';
                     if (sp) sp.style.display = '';
                 });
             }
