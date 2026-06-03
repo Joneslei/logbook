@@ -122,6 +122,9 @@
         }
 
         // ===== 工具函数 =====
+        function fmtDate(d) {
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
         function esc(s) {
             const d = document.createElement('div');
             d.textContent = s || '';
@@ -574,7 +577,7 @@
                     // 合并完成后再写入localStorage（避免覆盖未同步的本地数据）
                     localStorage.setItem('accountRecords', JSON.stringify(records));
                 }
-                document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('inputDate').value = fmtDate(new Date());
                 updateCustomerFilter();
                 setupSuggest('inputName', 'customerSuggest', function() { return [...new Set(records.map(r => r.name))].sort(); });
                 setupSuggest('inputProject', 'projectSuggest', function() { return [...new Set(records.map(r => r.project))].sort(); });
@@ -881,7 +884,7 @@
             } else {
                 area.classList.add('show');
                 overlay.classList.add('show');
-                document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('inputDate').value = fmtDate(new Date());
             }
         }
 
@@ -1090,6 +1093,10 @@
                 const val = sel.value;
                 sel.innerHTML = '<option value="">全部</option>' + customers.map(n => '<option value="' + esc(n) + '" ' + (n === val ? 'selected' : '') + '>' + esc(n) + '</option>').join('');
             });
+            // 同步筛选器状态，防止选中的客户不在列表中导致空结果
+            const c1 = document.getElementById('filterCustomer1').value;
+            const c2 = document.getElementById('filterCustomer2').value;
+            currentFilter.customers = [c1, c2].filter(v => v);
         }
 
         // ===== 自定义联想下拉 =====
@@ -1171,6 +1178,12 @@
                     const otherSpan = c.querySelector('span');
                     if (otherInput) otherInput.style.display = 'none';
                     if (otherSpan) otherSpan.style.display = '';
+                    // 付款/方式修改后保存
+                    if (otherInput && (otherInput.classList.contains('pay-edit') || otherInput.classList.contains('method-edit'))) {
+                        const row = c.closest('tr');
+                        const cb = row ? row.querySelector('.row-checkbox') : null;
+                        if (cb) saveIfDirty(parseInt(cb.dataset.id));
+                    }
                 }
             });
             cell.classList.toggle('mobile-active');
@@ -2005,6 +2018,12 @@
                     const sp = c.querySelector('span');
                     if (inp) inp.style.display = 'none';
                     if (sp) sp.style.display = '';
+                    // 付款/方式修改后保存
+                    if (inp && (inp.classList.contains('pay-edit') || inp.classList.contains('method-edit'))) {
+                        const row = c.closest('tr');
+                        const cb = row ? row.querySelector('.row-checkbox') : null;
+                        if (cb) saveIfDirty(parseInt(cb.dataset.id));
+                    }
                 });
             }
         });
