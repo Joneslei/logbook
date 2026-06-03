@@ -1604,14 +1604,14 @@
                 '<div class="profile-stat"><div class="profile-stat-value">' + paidCount + '</div><div class="profile-stat-label">已结账</div></div>' +
             '</div>';
 
-            html += '<div class="profile-filter">' +
-                '<button class="btn-filter btn-blue active" onclick="filterProfileRecords(\'' + esc(name).replace(/'/g, "\\'") + '\', \'\', this)">全部</button>' +
+            html += '<div class="profile-filter" id="profileFilterBtns">' +
+                '<button class="btn-filter active" onclick="filterProfileRecords(\'' + esc(name).replace(/'/g, "\\'") + '\', \'\', this)">全部</button>' +
                 '<button class="btn-filter" onclick="filterProfileRecords(\'' + esc(name).replace(/'/g, "\\'") + '\', \'unpaid\', this)">仅未结账</button>' +
                 '<button class="btn-filter" onclick="filterProfileRecords(\'' + esc(name).replace(/'/g, "\\'") + '\', \'paid\', this)">仅已结账</button>' +
             '</div>';
 
             html += '<div class="profile-table-wrap"><table class="profile-table"><thead><tr>' +
-                '<th class="col-date">日期</th><th class="col-project">项目</th><th class="col-price">单价</th><th class="col-qty">数量</th><th class="col-total">总价</th><th class="col-status">状态</th>' +
+                '<th>日期</th><th>项目</th><th>单价</th><th>数量</th><th>总价</th><th>状态</th>' +
             '</tr></thead><tbody id="profileTableBody">';
 
             html += buildProfileRows(customerRecords, '');
@@ -1628,12 +1628,12 @@
             if (!filtered.length) return '<tr><td colspan="6" style="color:var(--color-text-light);padding:20px;">暂无记录</td></tr>';
             return filtered.map(function(r) {
                 return '<tr>' +
-                    '<td class="col-date">' + esc(r.date) + '</td>' +
-                    '<td class="col-project" title="' + esc(r.project) + '">' + esc(r.project) + '</td>' +
-                    '<td class="col-price">¥' + r.price + '</td>' +
-                    '<td class="col-qty">' + r.qty + '</td>' +
-                    '<td class="col-total" style="font-weight:600;">¥' + r.total + '</td>' +
-                    '<td class="col-status ' + (r.paid ? 'paid' : 'unpaid') + '">' + (r.paid || '未付') + '</td>' +
+                    '<td>' + esc(r.date) + '</td>' +
+                    '<td>' + esc(r.project) + '</td>' +
+                    '<td>¥' + r.price + '</td>' +
+                    '<td>' + r.qty + '</td>' +
+                    '<td style="font-weight:600;">¥' + r.total + '</td>' +
+                    '<td class="' + (r.paid ? 'paid' : 'unpaid') + '">' + (r.paid || '未付') + '</td>' +
                 '</tr>';
             }).join('');
         }
@@ -1641,7 +1641,7 @@
         function filterProfileRecords(name, filter, btn) {
             var customerRecords = records.filter(function(r) { return r.name === name; }).sort(function(a, b) { return b.date.localeCompare(a.date); });
             document.getElementById('profileTableBody').innerHTML = buildProfileRows(customerRecords, filter);
-            btn.parentElement.querySelectorAll('.btn-filter').forEach(function(b) { b.classList.remove('active'); });
+            document.getElementById('profileFilterBtns').querySelectorAll('.btn-filter').forEach(function(b) { b.classList.remove('active'); });
             btn.classList.add('active');
         }
 

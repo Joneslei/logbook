@@ -442,15 +442,9 @@
         .profile-stat { text-align: center; padding: 10px 6px; background: var(--color-bg-hover); border-radius: 8px; border: 1px solid var(--color-border-light); }
         .profile-stat-value { font-size: 18px; font-weight: 700; color: var(--color-primary); }
         .profile-stat-label { font-size: 10px; color: var(--color-text-secondary); margin-top: 2px; }
-        .profile-table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
-        .profile-table th { background: var(--color-bg-hover); padding: 6px 6px; text-align: center; font-size: 11px; color: var(--color-text-secondary); position: sticky; top: 0; }
-        .profile-table td { padding: 5px 6px; text-align: center; border-bottom: 1px solid var(--color-bg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .profile-table .col-date { width: 80px; }
-        .profile-table .col-project { width: auto; }
-        .profile-table .col-price { width: 55px; }
-        .profile-table .col-qty { width: 40px; }
-        .profile-table .col-total { width: 60px; }
-        .profile-table .col-status { width: 50px; }
+        .profile-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .profile-table th { background: var(--color-bg-hover); padding: 6px 6px; text-align: center; font-size: 11px; color: var(--color-text-secondary); position: sticky; top: 0; white-space: nowrap; }
+        .profile-table td { padding: 5px 6px; text-align: center; border-bottom: 1px solid var(--color-bg); white-space: nowrap; }
         .profile-table-wrap { max-height: 55vh; overflow-y: auto; }
         .profile-filter { display: flex; gap: 6px; margin-bottom: 10px; }
         .profile-filter .btn-filter { padding: 5px 10px; font-size: 11px; }
