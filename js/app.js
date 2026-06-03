@@ -1248,10 +1248,15 @@
                 }
             }
             html += '<div style="position:relative;z-index:1;">';
-            html += '<div class="bill-title">📋 ' + esc(billTypeLabel) + '</div>';
+            // 店铺头部
+            html += '<div class="bill-shop-header">' +
+                '<img src="LOGO.png" alt="" class="bill-shop-logo">' +
+                '<div class="bill-shop-name">蒋故事手机维修</div>' +
+            '</div>';
+            html += '<div class="bill-title">' + esc(billTypeLabel) + '</div>';
             html += '<div class="bill-info">' +
                 '<div><span class="bill-info-label">客户：</span><span class="bill-info-value">' + esc(customers.join('、')) + '</span></div>' +
-                '<div><span class="bill-info-label">账单发送日期：</span><span class="bill-info-value">' + esc(today) + '</span></div>' +
+                '<div><span class="bill-info-label">日期：</span><span class="bill-info-value">' + esc(today) + '</span></div>' +
             '</div>';
 
             // 带表头的表格布局
@@ -1280,7 +1285,8 @@
             html += '<div class="bill-amount">合计：¥' + total + '</div>';
             html += '<div class="bill-footer">' +
                 '<div class="bill-footer-text">📍 安徽省芜湖市镜湖区融汇中江广场西区3楼328号</div>' +
-                '<div class="bill-footer-text" style="margin-top:5px;">📞 15655305888（微信同号）</div>' +
+                '<div class="bill-footer-text" style="margin-top:4px;">📞 15655305888（微信同号）</div>' +
+                '<div class="bill-footer-text" style="margin-top:4px;font-size:11px;color:var(--color-text-light);">感谢您的信任与支持</div>' +
             '</div></div></div>';
 
             document.getElementById('billContent').innerHTML = html;
@@ -1299,6 +1305,26 @@
             navigator.clipboard.writeText(document.getElementById('billContent').innerText)
                 .then(function() { showToast('账单已复制到剪贴板！', 'success'); })
                 .catch(function() { showToast('复制失败，请手动复制', 'error'); });
+        }
+
+        async function copyBillImage() {
+            const billEl = document.getElementById('billContent').querySelector('.bill-card');
+            if (!billEl) { showToast('没有可导出的账单！', 'warning'); return; }
+            const btn = document.querySelector('.btn-clipboard');
+            btn.textContent = '⏳ 生成中...';
+            btn.disabled = true;
+            try {
+                const canvas = await html2canvas(billEl, { backgroundColor: '#ffffff', scale: 2, useCORS: true, allowTaint: true, scrollX: 0, scrollY: 0,
+                    onclone: function(doc) { var c = doc.querySelector('.bill-card'); if (c) { c.style.padding = '20px'; c.style.background = '#fff'; } }
+                });
+                const blob = await new Promise(function(resolve) { canvas.toBlob(resolve, 'image/png'); });
+                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                showToast('图片已复制，可直接粘贴到微信！', 'success');
+            } catch (err) {
+                showToast('复制失败，请用「导出图片」保存后发送', 'warning');
+            }
+            btn.textContent = '📱 复制图片发微信';
+            btn.disabled = false;
         }
 
         function exportBillAsImage(e) {
