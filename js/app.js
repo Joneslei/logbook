@@ -2314,9 +2314,12 @@
         // 下拉刷新 - 仅在页面顶部时触发
         (function() {
             let pullStartY = 0;
+            let pullStartX = 0;
             let isPulling = false;
             let pullIndicator = null;
             let isRefreshing = false;
+            const PULL_TRIGGER_DISTANCE = 70;
+            const PULL_MAX_DISTANCE = 150;
 
             // 创建下拉指示器
             function createPullIndicator() {
@@ -2331,27 +2334,43 @@
                 document.body.appendChild(pullIndicator);
             }
 
-            // 只在表格区域顶部监听下拉
-            const tableWrap = document.querySelector('.table-wrap');
-            if (!tableWrap) return;
+            function canStartPull(e) {
+                if (isRefreshing || window.scrollY > 1 || document.documentElement.scrollTop > 1 || document.body.scrollTop > 1) return false;
+                const target = e.target;
+                if (target && target.closest && target.closest('input, textarea, select, button, .modal')) return false;
+                return true;
+            }
 
-            tableWrap.addEventListener('touchstart', function(e) {
+            // 在页面顶部监听下拉，横向滑动表格时不触发刷新。
+            const tableWrap = document.querySelector('.table-wrap') || { scrollTop: 0 };
+
+            document.addEventListener('touchstart', function(e) {
+                if (!canStartPull(e) || !e.touches || e.touches.length !== 1) return;
                 // 只在滚动位置为0时触发
                 if (tableWrap.scrollTop === 0) {
                     pullStartY = e.touches[0].clientY;
+                    pullStartX = e.touches[0].clientX;
                     isPulling = true;
                     createPullIndicator();
                 }
             }, { passive: true });
 
-            tableWrap.addEventListener('touchmove', function(e) {
+            document.addEventListener('touchmove', function(e) {
                 if (!isPulling || !pullIndicator || isRefreshing) return;
                 const pullY = e.touches[0].clientY;
+                const pullX = e.touches[0].clientX;
                 const pullDistance = pullY - pullStartY;
+                const horizontalDistance = Math.abs(pullX - pullStartX);
 
-                if (pullDistance > 0 && pullDistance < 150) {
+                if (horizontalDistance > pullDistance) {
+                    isPulling = false;
+                    pullIndicator.style.top = '-60px';
+                    return;
+                }
+
+                if (pullDistance > 0 && pullDistance < PULL_MAX_DISTANCE) {
                     pullIndicator.style.top = (pullDistance - 60) + 'px';
-                    if (pullDistance > 80) {
+                    if (pullDistance > PULL_TRIGGER_DISTANCE) {
                         pullIndicator.querySelector('span').textContent = '释放刷新';
                     } else {
                         pullIndicator.querySelector('span').textContent = '下拉刷新';
@@ -2359,12 +2378,12 @@
                 }
             }, { passive: true });
 
-            tableWrap.addEventListener('touchend', function(e) {
+            document.addEventListener('touchend', function(e) {
                 if (!isPulling || !pullIndicator || isRefreshing) return;
                 const pullEndY = e.changedTouches[0].clientY;
                 const pullDistance = pullEndY - pullStartY;
 
-                if (pullDistance > 80) {
+                if (pullDistance > PULL_TRIGGER_DISTANCE) {
                     // 触发刷新
                     isRefreshing = true;
                     pullIndicator.querySelector('span').textContent = '刷新中...';
