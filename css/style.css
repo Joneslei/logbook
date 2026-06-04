@@ -218,8 +218,6 @@
         tr.editing .edit-cell .select-edit { display: inline-block; }
         tr.editing .profile-btn { display: none; }
         tr.editing .edit-btn { display: none; }
-        /* 编辑模式下隐藏所有编辑按钮 */
-        body.editing-mode .edit-btn { display: none; }
         .inline-select { padding: 3px 6px; font-size: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg-card); }
         .profile-btn {
             background: var(--color-bg-card); color: var(--color-primary); border: 1px solid var(--color-primary); padding: 5px 10px;

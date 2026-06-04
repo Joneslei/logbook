@@ -1224,8 +1224,6 @@
             const isEditing = row.classList.toggle('editing');
 
             if (isEditing) {
-                // 添加编辑模式标记
-                document.body.classList.add('editing-mode');
                 // 只显示客户名称、项目、单价、数量、备注的编辑框
                 row.querySelectorAll('.edit-cell').forEach(cell => {
                     const display = cell.querySelector('.text-display');
@@ -1246,8 +1244,6 @@
                     }
                 });
             } else {
-                // 移除编辑模式标记
-                document.body.classList.remove('editing-mode');
                 // 隐藏所有编辑框
                 row.querySelectorAll('.edit-cell').forEach(cell => {
                     const display = cell.querySelector('.text-display');
@@ -1267,8 +1263,6 @@
             if (editingRow && !e.target.closest('tr.editing') && !e.target.closest('.edit-btn')) {
                 const id = editingRow.querySelector('.row-checkbox')?.dataset.id;
                 editingRow.classList.remove('editing');
-                // 移除编辑模式标记
-                document.body.classList.remove('editing-mode');
                 editingRow.querySelectorAll('.edit-cell').forEach(cell => {
                     const display = cell.querySelector('.text-display');
                     const input = cell.querySelector('.select-edit');
