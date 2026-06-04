@@ -24,61 +24,79 @@
  *  20. 移动端手势与悬浮按钮
  */
 
-        // ===== 1. 登录验证 =====
-        // 密码配置已移至 config.js
-        async function sha256(str) {
-            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        // 登录尝试次数限制
-        let loginAttempts = 0;
-        let loginLockoutUntil = 0;
+        // ===== 1. Supabase Auth 登录验证 =====
+        const sbClient = supabase.createClient(SB_URL, SB_KEY);
+        let _appStarted = false;
 
         async function doLogin() {
-            const input = document.getElementById('loginPassword');
+            const emailInput = document.getElementById('loginEmail');
+            const passwordInput = document.getElementById('loginPassword');
             const errEl = document.getElementById('loginError');
-
-            // 检查是否被锁定
-            if (Date.now() < loginLockoutUntil) {
-                const remaining = Math.ceil((loginLockoutUntil - Date.now()) / 1000);
-                errEl.textContent = '登录尝试次数过多，请等待 ' + remaining + ' 秒';
+            const button = document.querySelector('.login-btn');
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            if (!email || !password) {
+                errEl.textContent = '请输入邮箱和密码';
                 return;
             }
-            // 锁定过期后重置计数器
-            if (loginLockoutUntil && Date.now() >= loginLockoutUntil) {
-                loginAttempts = 0;
-                loginLockoutUntil = 0;
-            }
-
-            const hash = await sha256(input.value);
-            if (hash === PASSWORD_HASH) {
-                loginAttempts = 0;
-                sessionStorage.setItem('loggedIn', '1');
-                document.getElementById('loginOverlay').style.display = 'none';
-                initApp();
-            } else {
-                loginAttempts++;
-                if (loginAttempts >= APP_CONSTANTS.LOGIN_ATTEMPTS_MAX) {
-                    loginLockoutUntil = Date.now() + APP_CONSTANTS.LOGIN_LOCKOUT_DURATION;
-                    var lockSec = Math.round(APP_CONSTANTS.LOGIN_LOCKOUT_DURATION / 1000);
-                    errEl.textContent = '登录尝试次数过多，请等待 ' + lockSec + ' 秒';
-                    showToast('登录尝试次数过多，已锁定' + lockSec + '秒', 'error');
-                } else {
-                    errEl.textContent = '密码错误，请重试 (' + loginAttempts + '/' + APP_CONSTANTS.LOGIN_ATTEMPTS_MAX + ')';
-                }
-                input.classList.add('error');
-                setTimeout(() => input.classList.remove('error'), 500);
-                input.value = '';
-                input.focus();
+            button.disabled = true;
+            button.textContent = '登录中...';
+            errEl.textContent = '';
+            try {
+                const result = await sbClient.auth.signInWithPassword({ email: email, password: password });
+                if (result.error) throw result.error;
+                localStorage.setItem('loginEmail', email);
+                passwordInput.value = '';
+                startAuthenticatedApp();
+            } catch (e) {
+                errEl.textContent = e.message === 'Invalid login credentials' ? '邮箱或密码错误' : '登录失败：' + e.message;
+                passwordInput.classList.add('error');
+                setTimeout(function() { passwordInput.classList.remove('error'); }, 500);
+                passwordInput.focus();
+            } finally {
+                button.disabled = false;
+                button.textContent = '进入';
             }
         }
+
+        function startAuthenticatedApp() {
+            document.getElementById('loginOverlay').style.display = 'none';
+            if (!_appStarted) {
+                _appStarted = true;
+                initApp();
+            }
+        }
+
+        async function doLogout() {
+            await sbClient.auth.signOut();
+            location.reload();
+        }
+
+        async function getAuthHeaders(extra) {
+            const result = await sbClient.auth.getSession();
+            if (!result.data.session) throw new Error('登录已过期，请重新登录');
+            const token = result.data.session.access_token;
+            return Object.assign({
+                'apikey': SB_KEY,
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            }, extra || {});
+        }
+
+        async function bootstrapAuth() {
+            document.getElementById('loginEmail').value = localStorage.getItem('loginEmail') || '';
+            const result = await sbClient.auth.getSession();
+            if (result.data.session) startAuthenticatedApp();
+            else document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && document.getElementById('loginOverlay').style.display !== 'none') doLogin();
         });
-        if (sessionStorage.getItem('loggedIn') === '1') {
-            document.getElementById('loginOverlay').style.display = 'none';
-        }
+        sbClient.auth.onAuthStateChange(function(event, session) {
+            if (event === 'SIGNED_OUT') document.getElementById('loginOverlay').style.display = '';
+            else if (session) setTimeout(startAuthenticatedApp, 0);
+        });
 
         // 尽早初始化主题，避免闪烁
         initTheme();
@@ -115,7 +133,7 @@
                 try {
                     const ctrl = new AbortController();
                     setTimeout(function() { ctrl.abort(); }, 5000);
-                    const resp = await fetch(sbUrl('records', '?select=id&limit=1'), { headers: SB_HEADERS, signal: ctrl.signal });
+                    const resp = await fetch(sbUrl('records', '?select=id&limit=1'), { headers: await getAuthHeaders(), signal: ctrl.signal });
                     if (resp.ok) goOnline();
                 } catch(e) { /* 仍未连接 */ }
             }, 30000);
@@ -459,7 +477,7 @@
                 const pageSize = 1000;
                 for (let offset = 0; ; offset += pageSize) {
                     const url = sbUrl('records', '?order=date.desc,seq.asc&limit=' + pageSize + '&offset=' + offset);
-                    const resp = await fetch(url, { headers: SB_HEADERS, signal: abortSignal(15000), cache: 'no-store' });
+                    const resp = await fetch(url, { headers: await getAuthHeaders(), signal: abortSignal(15000), cache: 'no-store' });
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const page = await resp.json();
                     data.push.apply(data, page);
@@ -505,7 +523,7 @@
             try {
                 for (let i = 0; i < deleteIds.length; i += 100) {
                     const batch = deleteIds.slice(i, i + 100);
-                    const resp = await fetch(sbUrl('records', '?id=in.(' + batch.join(',') + ')'), { method: 'DELETE', headers: SB_HEADERS, signal: abortSignal(8000), cache: 'no-store' });
+                    const resp = await fetch(sbUrl('records', '?id=in.(' + batch.join(',') + ')'), { method: 'DELETE', headers: await getAuthHeaders(), signal: abortSignal(8000), cache: 'no-store' });
                     if (!resp.ok) throw new Error('DELETE failed: ' + resp.status);
                     batch.forEach(function(id) {
                         _knownCloudIds.delete(id);
@@ -515,7 +533,7 @@
                 }
                 for (let i = 0; i < upserts.length; i += 50) {
                     const batch = upserts.slice(i, i + 50);
-                    const resp = await fetch(sbUrl('records'), { method: 'POST', headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates' }, body: JSON.stringify(batch), signal: abortSignal(10000), cache: 'no-store' });
+                    const resp = await fetch(sbUrl('records'), { method: 'POST', headers: await getAuthHeaders({ 'Prefer': 'resolution=merge-duplicates' }), body: JSON.stringify(batch), signal: abortSignal(10000), cache: 'no-store' });
                     if (!resp.ok) throw new Error('POST failed: ' + resp.status);
                     batch.forEach(function(record) {
                         const id = String(record.id);
@@ -567,8 +585,7 @@
                 return;
             }
             try {
-                var client = supabase.createClient(SB_URL, SB_KEY);
-                _realtimeChannel = client.channel('records-changes')
+                _realtimeChannel = sbClient.channel('records-changes')
                     .on('presence', { event: 'sync' }, function() {
                         var state = _realtimeChannel.presenceState();
                         _onlineDevices = Object.keys(state).length;
@@ -700,7 +717,7 @@
                 if (cloudOk && hasPendingSync()) saveToCloud(records, true);
             })();
         }
-        if (sessionStorage.getItem('loggedIn') === '1') initApp();
+        bootstrapAuth();
 
         // ===== 数据操作 =====
 

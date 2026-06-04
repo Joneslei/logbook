@@ -35,7 +35,7 @@ const context = {
         getItem(key) { return store.has(key) ? store.get(key) : null; },
         setItem(key, value) { store.set(key, String(value)); }
     },
-    sessionStorage: { getItem() { return null; }, setItem() {} },
+    authSession: null,
     document: {
         documentElement: element(),
         body: element(),
@@ -53,6 +53,19 @@ const context = {
         innerHeight: 768
     },
     navigator: {},
+    supabase: {
+        createClient() {
+            return {
+                auth: {
+                    async getSession() { return { data: { session: context.authSession } }; },
+                    async signInWithPassword() { return { data: {}, error: null }; },
+                    async signOut() {},
+                    onAuthStateChange() { return { data: { subscription: { unsubscribe() {} } } }; }
+                },
+                channel() { return { on() { return this; }, subscribe() { return this; } }; }
+            };
+        }
+    },
     APP_CONSTANTS: {
         PAGE_SIZE: 50,
         UNDO_MAX: 30,
@@ -63,14 +76,12 @@ const context = {
         TOAST_DURATION: 3000,
         TOAST_WARNING_DURATION: 5000
     },
-    PASSWORD_HASH: '',
     SB_URL: 'https://example.invalid',
-    SB_HEADERS: {},
+    SB_KEY: 'test-public-key',
     sbUrl(table, params) { return 'https://example.invalid/' + table + (params || ''); }
 };
 context.window.document = context.document;
 context.window.localStorage = context.localStorage;
-context.window.sessionStorage = context.sessionStorage;
 context.globalThis = context;
 
 vm.createContext(context);
@@ -106,4 +117,15 @@ const ids = new Set();
 for (let i = 0; i < 500; i++) ids.add(vm.runInContext('genId()', context));
 assert.equal(ids.size, 500);
 
-console.log('sync queue tests passed');
+(async function() {
+    context.authSession = { access_token: 'test-token' };
+    const headers = await vm.runInContext('getAuthHeaders()', context);
+    assert.equal(headers.Authorization, 'Bearer test-token');
+
+    context.authSession = null;
+    await assert.rejects(vm.runInContext('getAuthHeaders()', context), /登录已过期/);
+    console.log('sync queue and auth tests passed');
+})().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+});

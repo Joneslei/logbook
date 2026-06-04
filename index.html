@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="theme-color" content="#1e40af">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/style.css?v=20260604">
+    <link rel="stylesheet" href="css/style.css?v=20260604-auth">
 </head>
 <body>
     <!-- 登录页面 -->
@@ -19,8 +19,9 @@
         <div class="login-box">
             <div class="login-icon"><img src="LOGO.png" alt="Logo" class="logo-img" id="loginLogo"></div>
             <div class="login-title">蒋故事记账工具</div>
-            <div class="login-subtitle">请输入密码以访问</div>
-            <input type="password" id="loginPassword" class="login-input" placeholder="······" maxlength="20" autofocus>
+            <div class="login-subtitle">请使用管理员账号登录</div>
+            <input type="email" id="loginEmail" class="login-input login-email" placeholder="邮箱" autocomplete="username">
+            <input type="password" id="loginPassword" class="login-input" placeholder="······" autocomplete="current-password" autofocus>
             <button class="login-btn" onclick="doLogin()">进入</button>
             <div id="loginError" class="login-error"></div>
         </div>
@@ -45,6 +46,7 @@
                         <svg id="themeIconMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                         <svg id="themeIconSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                     </button>
+                    <button class="eye-toggle" onclick="doLogout()" id="logoutBtn" title="退出登录">退出</button>
                 </div>
             </div>
 
@@ -273,11 +275,11 @@
     </div>
 
     <script src="js/config.js"></script>
-    <script src="js/app.js?v=20260604"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/app.js?v=20260604-auth"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js?v=2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
     <script>
         // 注册 Service Worker
         if ('serviceWorker' in navigator) {
