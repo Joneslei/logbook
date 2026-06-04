@@ -681,28 +681,28 @@
             if (!r) return;
             r.price = Math.max(0, parseFloat(value) || 0);
             r.total = r.price * r.qty;
-            invalidateFilterCache(); saveData(); saveToCloud(records, true); batchRender();
+            invalidateFilterCache(); saveData(); saveToCloud(records, true);
         }
 
         function updateName(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.name = value.trim();
-            invalidateFilterCache(); saveData(); saveToCloud(records, true); updateCustomerFilter(); batchRender();
+            invalidateFilterCache(); saveData(); saveToCloud(records, true); updateCustomerFilter();
         }
 
         function updateProject(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.project = value.trim();
-            invalidateFilterCache(); saveData(); saveToCloud(records, true); batchRender();
+            invalidateFilterCache(); saveData(); saveToCloud(records, true);
         }
 
         function updateRemark(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.remark = value.trim();
-            invalidateFilterCache(); saveData(); saveToCloud(records, true); batchRender();
+            invalidateFilterCache(); saveData(); saveToCloud(records, true);
         }
 
         function updateQty(id, value) {
@@ -710,7 +710,7 @@
             if (!r) return;
             r.qty = Math.max(1, parseInt(value) || 1);
             r.total = r.price * r.qty;
-            invalidateFilterCache(); saveData(); saveToCloud(records, true); batchRender();
+            invalidateFilterCache(); saveData(); saveToCloud(records, true);
         }
 
         // FIX: 删除 updateTotal，总价只能由 price*qty 自动计算
@@ -1255,8 +1255,9 @@
                     if (display) display.style.display = '';
                     if (input) input.style.display = 'none';
                 });
-                // 保存所有更改
+                // 保存所有更改并刷新表格
                 saveIfDirty(id);
+                invalidateFilterCache(); batchRender();
             }
         }
 
@@ -1274,7 +1275,7 @@
                     if (display) display.style.display = '';
                     if (input) input.style.display = 'none';
                 });
-                if (id) saveIfDirty(parseInt(id));
+                if (id) { saveIfDirty(parseInt(id)); invalidateFilterCache(); batchRender(); }
             }
         });
 
