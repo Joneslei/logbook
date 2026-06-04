@@ -34,7 +34,13 @@ const context = {
     requestAnimationFrame(fn) { fn(); },
     localStorage: {
         getItem(key) { return store.has(key) ? store.get(key) : null; },
-        setItem(key, value) { store.set(key, String(value)); }
+        setItem(key, value) { store.set(key, String(value)); },
+        removeItem(key) { store.delete(key); }
+    },
+    sessionStorage: {
+        getItem() { return null; },
+        setItem() {},
+        removeItem() {}
     },
     authSession: null,
     document: {
@@ -63,7 +69,8 @@ const context = {
     URLSearchParams,
     navigator: {},
     supabase: {
-        createClient() {
+        createClient(url, key, options) {
+            context.clientOptions = options;
             return {
                 auth: {
                     async getSession() { return { data: { session: context.authSession } }; },
@@ -99,6 +106,7 @@ const context = {
 };
 context.window.document = context.document;
 context.window.localStorage = context.localStorage;
+context.window.sessionStorage = context.sessionStorage;
 context.document.title = 'Test';
 context.globalThis = context;
 
@@ -136,6 +144,9 @@ for (let i = 0; i < 500; i++) ids.add(vm.runInContext('genId()', context));
 assert.equal(ids.size, 500);
 
 (async function() {
+    assert.equal(context.clientOptions.auth.storage, context.sessionStorage);
+    assert.equal(context.clientOptions.auth.persistSession, true);
+
     context.authSession = { access_token: 'test-token' };
     const headers = await vm.runInContext('getAuthHeaders()', context);
     assert.equal(headers.Authorization, 'Bearer test-token');

@@ -25,7 +25,16 @@
  */
 
         // ===== 1. Supabase Auth 登录验证 =====
-        const sbClient = supabase.createClient(SB_URL, SB_KEY);
+        // 会话只保存在当前浏览器会话中：刷新页面保持登录，关闭浏览器后必须重新登录。
+        localStorage.removeItem('sb-jupbscoeollfrymgfvom-auth-token');
+        const sbClient = supabase.createClient(SB_URL, SB_KEY, {
+            auth: {
+                storage: window.sessionStorage,
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true
+            }
+        });
         let _appStarted = false;
         let _passwordRecoveryMode = false;
 
