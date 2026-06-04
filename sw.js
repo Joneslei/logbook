@@ -4,7 +4,7 @@
  */
 
 // 使用日期作为版本号，更新代码时自动清除旧缓存
-const CACHE_VERSION = '20260604-session-only';
+const CACHE_VERSION = '20260604-global-check';
 const CACHE_NAME = 'accounting-app-v' + CACHE_VERSION;
 const CDN_CACHE_NAME = 'accounting-cdn-v' + CACHE_VERSION;
 
@@ -123,6 +123,22 @@ self.addEventListener('fetch', function(event) {
 
     // 非同源的非CDN请求，跳过
     if (!requestUrl.startsWith(self.location.origin)) {
+        return;
+    }
+
+    // 代码资源优先请求网络，避免发布后旧 Service Worker 返回过期脚本。
+    if (/\.(js|css)(\?|$)/.test(requestUrl)) {
+        event.respondWith(
+            fetch(event.request)
+                .then(function(response) {
+                    if (response && response.status === 200) {
+                        var copy = response.clone();
+                        caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, copy); });
+                    }
+                    return response;
+                })
+                .catch(function() { return caches.match(event.request, { ignoreSearch: true }); })
+        );
         return;
     }
 

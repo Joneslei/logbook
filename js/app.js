@@ -39,7 +39,9 @@
         let _passwordRecoveryMode = false;
 
         function authRedirectUrl() {
-            return window.location.origin + window.location.pathname;
+            const path = window.location.pathname;
+            const basePath = path.endsWith('/') ? path : path.substring(0, path.lastIndexOf('/') + 1);
+            return window.location.origin + basePath;
         }
 
         function showLoginMessage(message, type) {
@@ -98,6 +100,7 @@
 
         async function requestPasswordReset() {
             const emailInput = document.getElementById('loginEmail');
+            const button = document.getElementById('resetEmailBtn');
             const email = emailInput.value.trim();
             if (!email) {
                 showLoginMessage('请先填写邮箱地址');
@@ -106,12 +109,20 @@
             }
             localStorage.setItem('loginEmail', email);
             showLoginMessage('正在发送重置邮件...', 'success');
+            button.disabled = true;
             try {
                 const result = await sbClient.auth.resetPasswordForEmail(email, { redirectTo: authRedirectUrl() });
                 if (result.error) throw result.error;
                 showLoginMessage('重置邮件已发送，请检查邮箱。链接有效期有限，请尽快打开。', 'success');
+                button.textContent = '请等待 60 秒';
+                const timer = setTimeout(function() {
+                    button.disabled = false;
+                    button.textContent = '忘记密码？';
+                }, 60000);
+                if (timer && timer.unref) timer.unref();
             } catch (e) {
-                showLoginMessage('发送失败：' + e.message);
+                button.disabled = false;
+                showLoginMessage(e.message && e.message.includes('rate limit') ? '发送过于频繁，请约一小时后再试' : '发送失败：' + e.message);
             }
         }
 
@@ -119,6 +130,7 @@
             const password = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const errEl = document.getElementById('resetPasswordError');
+            const button = document.getElementById('updatePasswordBtn');
             if (password.length < 6) {
                 errEl.textContent = '新密码至少需要 6 位';
                 return;
@@ -128,6 +140,7 @@
                 return;
             }
             errEl.textContent = '正在保存...';
+            button.disabled = true;
             try {
                 const result = await sbClient.auth.updateUser({ password: password });
                 if (result.error) throw result.error;
@@ -138,6 +151,8 @@
                 showLoginForm('密码修改成功，请使用新密码登录');
             } catch (e) {
                 errEl.textContent = '修改失败：' + e.message;
+            } finally {
+                button.disabled = false;
             }
         }
 
@@ -505,7 +520,7 @@
 
         function cloudRecord(r) {
             return { id: r.id, seq: r.seq, date: r.date, name: r.name, project: r.project,
-                     price: money(r.price), qty: r.qty, total: money(r.total), paid: r.paid || null,
+                     price: money(r.price), qty: r.qty, total: money(r.total), paid: r.paid === '已付' ? '已付' : null,
                      method: r.method || null, remark: r.remark || null };
         }
 
@@ -578,7 +593,7 @@
         function normalizeCloudRecord(r) {
             return { id: r.id, seq: r.seq, date: r.date, name: r.name || '', project: r.project || '',
                      price: Number(r.price) || 0, qty: r.qty || 1, total: Number(r.total) || 0,
-                     paid: r.paid || '', method: r.method || '', remark: r.remark || '' };
+                     paid: r.paid === '已付' ? '已付' : '', method: r.method || '', remark: r.remark || '' };
         }
 
         async function loadFromCloud(retries) {
@@ -1275,7 +1290,7 @@
                     '</td>' +
                     '<td>¥' + r.total + '</td>' +
                     '<td style="position:relative;" onmouseenter="showEdit(this)" onmouseleave="hideEdit(this)" onclick="mobileEditCell(this)">' +
-                        '<span class="pay-display ' + (r.paid ? 'paid' : 'unpaid') + '">' + (r.paid || '未付') + '</span>' +
+                        '<span class="pay-display ' + (r.paid ? 'paid' : 'unpaid') + '">' + esc(r.paid || '未付') + '</span>' +
                         '<select class="inline-select pay-edit" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:90%;" onchange="markRowDirty(' + r.id + ')" onclick="event.stopPropagation()">' +
                             '<option value="" ' + (r.paid ? '' : 'selected') + '>未付</option>' +
                             '<option value="已付" ' + (r.paid ? 'selected' : '') + '>已付</option>' +
@@ -1894,7 +1909,7 @@
                             id: genId(), seq: cols[0] || '', date: cols[1] || '', name: cols[2] || '',
                             project: cols[3] || '', price, qty,
                             total: money(price * qty), // FIX: 强制重新计算
-                            paid: cols[7] === '未付' ? '' : cols[7], method: cols[8] || '', remark: cols[9] || ''
+                            paid: cols[7] === '已付' ? '已付' : '', method: cols[8] || '', remark: cols[9] || ''
                         });
                     }
                 }
@@ -2058,7 +2073,7 @@
                     '<td>¥' + r.price + '</td>' +
                     '<td>' + r.qty + '</td>' +
                     '<td style="font-weight:600;">¥' + r.total + '</td>' +
-                    '<td class="' + (r.paid ? 'paid' : 'unpaid') + '">' + (r.paid || '未付') + '</td>' +
+                    '<td class="' + (r.paid ? 'paid' : 'unpaid') + '">' + esc(r.paid || '未付') + '</td>' +
                 '</tr>';
             }).join('');
         }

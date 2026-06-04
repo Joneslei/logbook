@@ -60,7 +60,7 @@ const context = {
         innerHeight: 768,
         location: {
             origin: 'https://example.com',
-            pathname: '/logbook/',
+            pathname: '/logbook/index.html',
             hash: ''
         },
         history: { replaceState() {} }
@@ -138,6 +138,8 @@ vm.runInContext(`
 `, context);
 assert.equal(vm.runInContext('records.length', context), 1);
 assert.equal(vm.runInContext('records[0].name', context), 'A');
+assert.equal(vm.runInContext(`normalizeCloudRecord({ paid: '<img src=x onerror=alert(1)>' }).paid`, context), '');
+assert.equal(vm.runInContext(`cloudRecord({ id: 3, paid: '<img src=x onerror=alert(1)>' }).paid`, context), null);
 
 const ids = new Set();
 for (let i = 0; i < 500; i++) ids.add(vm.runInContext('genId()', context));

@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="theme-color" content="#1e40af">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/style.css?v=20260604-session-only">
+    <link rel="stylesheet" href="css/style.css?v=20260604-global-check">
 </head>
 <body>
     <!-- 登录页面 -->
@@ -24,14 +24,14 @@
                 <input type="email" id="loginEmail" class="login-input login-email" placeholder="邮箱" autocomplete="username">
                 <input type="password" id="loginPassword" class="login-input" placeholder="······" autocomplete="current-password" autofocus>
                 <button class="login-btn" onclick="doLogin()">进入</button>
-                <button class="login-link-btn" onclick="requestPasswordReset()">忘记密码？</button>
+                <button class="login-link-btn" id="resetEmailBtn" onclick="requestPasswordReset()">忘记密码？</button>
                 <div id="loginError" class="login-error"></div>
             </div>
             <div id="resetPasswordForm" class="hidden">
                 <div class="login-subtitle">请输入两次新密码</div>
                 <input type="password" id="newPassword" class="login-input login-password-spaced" placeholder="新密码" autocomplete="new-password">
                 <input type="password" id="confirmPassword" class="login-input" placeholder="确认新密码" autocomplete="new-password">
-                <button class="login-btn" onclick="updatePassword()">保存新密码</button>
+                <button class="login-btn" id="updatePasswordBtn" onclick="updatePassword()">保存新密码</button>
                 <div id="resetPasswordError" class="login-error"></div>
             </div>
         </div>
@@ -286,7 +286,7 @@
 
     <script src="js/config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <script src="js/app.js?v=20260604-session-only"></script>
+    <script src="js/app.js?v=20260604-global-check"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js?v=2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
