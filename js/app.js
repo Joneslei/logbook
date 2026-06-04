@@ -348,6 +348,7 @@
         function goPage(p) { currentPage = p; renderTable(); updateSelectedStats(); document.querySelector('.table-wrap').scrollTop = 0; }
 
         // ===== 全局状态 =====
+        const defaultRecords = [];
         let records = [];
         let _idCounter = 0;
         function genId() { return Date.now() * 1000 + (++_idCounter); }
