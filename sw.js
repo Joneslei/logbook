@@ -4,7 +4,7 @@
  */
 
 // 使用日期作为版本号，更新代码时自动清除旧缓存
-const CACHE_VERSION = '20260530';
+const CACHE_VERSION = '20260604';
 const CACHE_NAME = 'accounting-app-v' + CACHE_VERSION;
 const CDN_CACHE_NAME = 'accounting-cdn-v' + CACHE_VERSION;
 
@@ -85,11 +85,27 @@ self.addEventListener('fetch', function(event) {
 
     var requestUrl = event.request.url;
 
+    // 页面导航优先请求网络，离线时再回退到缓存首页。
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request)
+                .then(function(response) {
+                    if (response && response.status === 200) {
+                        var copy = response.clone();
+                        caches.open(CACHE_NAME).then(function(cache) { cache.put('./index.html', copy); });
+                    }
+                    return response;
+                })
+                .catch(function() { return caches.match('./index.html'); })
+        );
+        return;
+    }
+
     // CDN 资源：stale-while-revalidate（先返回缓存，后台更新）
     if (CDN_ASSETS.some(function(url) { return requestUrl.startsWith(url.split('?')[0]); })) {
         event.respondWith(
             caches.open(CDN_CACHE_NAME).then(function(cache) {
-                return cache.match(event.request).then(function(cachedResponse) {
+                return cache.match(event.request, { ignoreSearch: true }).then(function(cachedResponse) {
                     var fetchPromise = fetch(event.request).then(function(networkResponse) {
                         if (networkResponse && networkResponse.status === 200) {
                             cache.put(event.request, networkResponse.clone());
@@ -112,7 +128,7 @@ self.addEventListener('fetch', function(event) {
 
     // 本地资源：cache-first 策略
     event.respondWith(
-        caches.match(event.request)
+        caches.match(event.request, { ignoreSearch: true })
             .then(function(response) {
                 // 缓存命中，直接返回
                 if (response) {
@@ -135,13 +151,7 @@ self.addEventListener('fetch', function(event) {
 
                         return response;
                     })
-                    .catch(function() {
-                        // 网络失败时，页面请求返回缓存的首页
-                        if (event.request.mode === 'navigate') {
-                            return caches.match('./index.html');
-                        }
-                    });
+                    .catch(function() { return caches.match(event.request, { ignoreSearch: true }); });
             })
     );
 });
-

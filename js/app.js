@@ -125,6 +125,9 @@
         function fmtDate(d) {
             return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         }
+        function money(value) {
+            return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+        }
         function esc(s) {
             const d = document.createElement('div');
             d.textContent = s || '';
@@ -301,6 +304,7 @@
             records.splice(item.index, 0, item.record);
             invalidateFilterCache();
             recalcSeq();
+            queueUpsert(item.record);
             saveData();
             saveToCloud(records, true);
             updateCustomerFilter();
@@ -350,8 +354,10 @@
         // ===== 全局状态 =====
         const defaultRecords = [];
         let records = [];
-        let _idCounter = 0;
-        function genId() { return Date.now() * 1000 + (++_idCounter); }
+        let _idCounter = crypto.getRandomValues(new Uint16Array(1))[0] % 1000;
+        function genId() {
+            return Date.now() * 1000 + (_idCounter++ % 1000);
+        }
         let currentFilter = { customers: [], paid: '', dateFrom: '', dateTo: '', keyword: '' };
         const dirtyRows = new Set();
 
@@ -364,21 +370,105 @@
         }
 
         // ===== Supabase 数据操作 =====
+        let _pendingSync = { upserts: {}, deletes: {} };
+        let _syncPromise = null;
+        let _knownCloudIds = new Set();
+
+        function cloudRecord(r) {
+            return { id: r.id, seq: r.seq, date: r.date, name: r.name, project: r.project,
+                     price: money(r.price), qty: r.qty, total: money(r.total), paid: r.paid || null,
+                     method: r.method || null, remark: r.remark || null };
+        }
+
+        function loadPendingSync() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('pendingSync') || '{}');
+                _pendingSync.upserts = saved.upserts || {};
+                _pendingSync.deletes = saved.deletes || {};
+            } catch (e) {
+                _pendingSync = { upserts: {}, deletes: {} };
+            }
+        }
+
+        function savePendingSync() {
+            try {
+                localStorage.setItem('pendingSync', JSON.stringify(_pendingSync));
+            } catch (e) {
+                console.warn('保存待同步队列失败:', e.message);
+            }
+        }
+
+        function queueUpsert(record) {
+            const id = String(record.id);
+            _pendingSync.upserts[id] = cloudRecord(record);
+            delete _pendingSync.deletes[id];
+            savePendingSync();
+        }
+
+        function queueDelete(id) {
+            id = String(id);
+            delete _pendingSync.upserts[id];
+            _pendingSync.deletes[id] = true;
+            savePendingSync();
+        }
+
+        function queueAllUpserts(items) {
+            items.forEach(function(record) {
+                const id = String(record.id);
+                _pendingSync.upserts[id] = cloudRecord(record);
+                delete _pendingSync.deletes[id];
+            });
+            savePendingSync();
+        }
+
+        function queueAllDeletes(items) {
+            items.forEach(function(record) {
+                const id = String(record.id);
+                delete _pendingSync.upserts[id];
+                _pendingSync.deletes[id] = true;
+            });
+            savePendingSync();
+        }
+
+        function hasPendingSync() {
+            return Object.keys(_pendingSync.upserts).length > 0 || Object.keys(_pendingSync.deletes).length > 0;
+        }
+
+        function applyPendingSync() {
+            const deletes = _pendingSync.deletes;
+            records = records.filter(function(r) { return !deletes[String(r.id)]; });
+            Object.keys(_pendingSync.upserts).forEach(function(id) {
+                const pending = _pendingSync.upserts[id];
+                const idx = records.findIndex(function(r) { return String(r.id) === id; });
+                const normalized = normalizeCloudRecord(pending);
+                if (idx >= 0) records[idx] = normalized;
+                else records.push(normalized);
+            });
+        }
+
+        function normalizeCloudRecord(r) {
+            return { id: r.id, seq: r.seq, date: r.date, name: r.name || '', project: r.project || '',
+                     price: Number(r.price) || 0, qty: r.qty || 1, total: Number(r.total) || 0,
+                     paid: r.paid || '', method: r.method || '', remark: r.remark || '' };
+        }
+
         async function loadFromCloud(retries) {
             retries = retries || 0;
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(function() { controller.abort(); }, 15000);
-                const url = SB_URL + '/rest/v1/records?order=date.desc,seq.asc';
-                const resp = await fetch(url, { headers: SB_HEADERS, signal: controller.signal, cache: 'no-store' });
-                clearTimeout(timeoutId);
-                if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                const data = await resp.json();
-                records = data.map(function(r) {
-                    return { id: r.id, seq: r.seq, date: r.date, name: r.name || '', project: r.project || '',
-                             price: Number(r.price) || 0, qty: r.qty || 1, total: Number(r.total) || 0,
-                             paid: r.paid || '', method: r.method || '', remark: r.remark || '' };
-                });
+                const data = [];
+                const pageSize = 1000;
+                for (let offset = 0; ; offset += pageSize) {
+                    const url = sbUrl('records', '?order=date.desc,seq.asc&limit=' + pageSize + '&offset=' + offset);
+                    const resp = await fetch(url, { headers: SB_HEADERS, signal: abortSignal(15000), cache: 'no-store' });
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    const page = await resp.json();
+                    data.push.apply(data, page);
+                    if (page.length < pageSize) break;
+                }
+                records = data.map(normalizeCloudRecord);
+                _knownCloudIds = new Set(records.map(function(r) { return String(r.id); }));
+                applyPendingSync();
+                recalcSeq();
                 isOnline = true;
                 setSyncStatus('online', '已连接云端');
                 return true;
@@ -396,43 +486,47 @@
             }
         }
 
-        // FIX: 改用 UPSERT 替代 DELETE+INSERT，防止数据丢失
+        // 只同步明确记录的本地操作，避免多设备之间互相误删。
         async function saveToCloud(recordsToSave, force) {
             if (!isOnline) return;
-            // 防抖：距上次同步不到间隔时间则跳过（force=true 时跳过检查）
+            if (!hasPendingSync()) return;
             if (!force && Date.now() - _lastCloudSync < APP_CONSTANTS.CLOUD_SYNC_INTERVAL) return;
-            _lastCloudSync = Date.now();
+            if (_syncPromise) return _syncPromise;
+            _syncPromise = flushPendingSync().finally(function() { _syncPromise = null; });
+            return _syncPromise;
+        }
 
-            // 快照：防止异步期间Realtime修改records导致竞态
-            const snapshot = recordsToSave.slice();
+        async function flushPendingSync() {
+            _lastCloudSync = Date.now();
+            const snapshot = JSON.parse(JSON.stringify(_pendingSync));
+            const deleteIds = Object.keys(snapshot.deletes);
+            const upserts = Object.values(snapshot.upserts);
             setSyncStatus('syncing', '同步中...');
             try {
-                const resp = await fetch(sbUrl('records', '?select=id'), { headers: SB_HEADERS, signal: abortSignal(8000), cache: 'no-store' });
-                if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                const existingIds = (await resp.json()).map(r => r.id);
-                const localIds = new Set(snapshot.map(r => r.id));
-
-                // 增量删除
-                const toDelete = existingIds.filter(id => !localIds.has(id));
-                for (let i = 0; i < toDelete.length; i += 100) {
-                    const batch = toDelete.slice(i, i + 100);
-                    const delResp = await fetch(sbUrl('records', '?id=in.(' + batch.join(',') + ')'), { method: 'DELETE', headers: SB_HEADERS, signal: abortSignal(8000), cache: 'no-store' });
-                    if (!delResp.ok) throw new Error('DELETE failed: ' + delResp.status);
-                }
-
-                // 增量 UPSERT（分批50条）
-                for (let i = 0; i < snapshot.length; i += 50) {
-                    const batch = snapshot.slice(i, i + 50).map(function(r) {
-                        return { id: r.id, seq: r.seq, date: r.date, name: r.name, project: r.project,
-                                 price: r.price, qty: r.qty, total: r.total, paid: r.paid || null,
-                                 method: r.method || null, remark: r.remark || null };
+                for (let i = 0; i < deleteIds.length; i += 100) {
+                    const batch = deleteIds.slice(i, i + 100);
+                    const resp = await fetch(sbUrl('records', '?id=in.(' + batch.join(',') + ')'), { method: 'DELETE', headers: SB_HEADERS, signal: abortSignal(8000), cache: 'no-store' });
+                    if (!resp.ok) throw new Error('DELETE failed: ' + resp.status);
+                    batch.forEach(function(id) {
+                        _knownCloudIds.delete(id);
+                        if (_pendingSync.deletes[id]) delete _pendingSync.deletes[id];
                     });
-                    const r = await fetch(sbUrl('records'), { method: 'POST', headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates' }, body: JSON.stringify(batch), signal: abortSignal(10000), cache: 'no-store' });
-                    if (!r.ok) throw new Error('POST failed: ' + r.status);
+                    savePendingSync();
                 }
-
+                for (let i = 0; i < upserts.length; i += 50) {
+                    const batch = upserts.slice(i, i + 50);
+                    const resp = await fetch(sbUrl('records'), { method: 'POST', headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates' }, body: JSON.stringify(batch), signal: abortSignal(10000), cache: 'no-store' });
+                    if (!resp.ok) throw new Error('POST failed: ' + resp.status);
+                    batch.forEach(function(record) {
+                        const id = String(record.id);
+                        _knownCloudIds.add(id);
+                        if (JSON.stringify(_pendingSync.upserts[id]) === JSON.stringify(record)) delete _pendingSync.upserts[id];
+                    });
+                    savePendingSync();
+                }
                 _cloudFailCount = 0;
-                setSyncStatus('online', '已同步');
+                setSyncStatus('online', hasPendingSync() ? '仍有变更待同步' : '已同步');
+                if (hasPendingSync()) scheduleSave();
             } catch (e) {
                 console.warn('云端保存失败', e.message);
                 _cloudFailCount++;
@@ -450,6 +544,7 @@
 
         // ===== 实时同步（Supabase Realtime） =====
         let _realtimeChannel = null;
+        let _realtimeRetryTimer = null;
         let _isProcessingRealtime = false;
         let _onlineDevices = 1;
         let _deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
@@ -465,7 +560,12 @@
         }
 
         function startRealtime() {
-            if (typeof supabase === 'undefined') return;
+            if (_realtimeChannel) return;
+            if (typeof supabase === 'undefined') {
+                clearTimeout(_realtimeRetryTimer);
+                _realtimeRetryTimer = setTimeout(startRealtime, 1000);
+                return;
+            }
             try {
                 var client = supabase.createClient(SB_URL, SB_KEY);
                 _realtimeChannel = client.channel('records-changes')
@@ -486,29 +586,25 @@
                     })
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'records' }, function(payload) {
                         _isProcessingRealtime = true;
+                        var changedId = String((payload.new && payload.new.id) || (payload.old && payload.old.id));
+                        if (_pendingSync.upserts[changedId] || _pendingSync.deletes[changedId]) {
+                            _isProcessingRealtime = false;
+                            return;
+                        }
                         if (payload.eventType === 'INSERT') {
+                            _knownCloudIds.add(changedId);
                             if (!records.find(function(r) { return r.id === payload.new.id; })) {
-                                records.push({
-                                    id: payload.new.id, seq: payload.new.seq, date: payload.new.date,
-                                    name: payload.new.name || '', project: payload.new.project || '',
-                                    price: Number(payload.new.price) || 0, qty: payload.new.qty || 1,
-                                    total: Number(payload.new.total) || 0, paid: payload.new.paid || '',
-                                    method: payload.new.method || '', remark: payload.new.remark || ''
-                                });
+                                records.push(normalizeCloudRecord(payload.new));
                                 recalcSeq();
                             }
                         } else if (payload.eventType === 'UPDATE') {
+                            _knownCloudIds.add(changedId);
                             var idx = records.findIndex(function(r) { return r.id === payload.new.id; });
                             if (idx >= 0) {
-                                records[idx] = {
-                                    id: payload.new.id, seq: payload.new.seq, date: payload.new.date,
-                                    name: payload.new.name || '', project: payload.new.project || '',
-                                    price: Number(payload.new.price) || 0, qty: payload.new.qty || 1,
-                                    total: Number(payload.new.total) || 0, paid: payload.new.paid || '',
-                                    method: payload.new.method || '', remark: payload.new.remark || ''
-                                };
+                                records[idx] = normalizeCloudRecord(payload.new);
                             }
                         } else if (payload.eventType === 'DELETE') {
+                            _knownCloudIds.delete(changedId);
                             var delIdx = records.findIndex(function(r) { return r.id === payload.old.id; });
                             if (delIdx >= 0) records.splice(delIdx, 1);
                             recalcSeq();
@@ -547,6 +643,7 @@
                 if (newLocal.length > 0) {
                     records = records.concat(newLocal);
                     recalcSeq();
+                    queueAllUpserts(newLocal);
                     localStorage.setItem('accountRecords', JSON.stringify(records));
                     scheduleSave();
                     showToast('已恢复 ' + newLocal.length + ' 条未同步记录', 'info');
@@ -559,18 +656,23 @@
         function initApp() {
             (async function() {
                 loadUndoStack();
+                loadPendingSync();
                 const cloudOk = await loadFromCloud();
                 if (!cloudOk) {
                     try {
                         const saved = localStorage.getItem('accountRecords');
                         records = saved ? JSON.parse(saved) : defaultRecords;
+                        applyPendingSync();
                     } catch (e) {
                         console.warn('读取本地数据失败，使用默认数据', e);
                         records = defaultRecords;
                     }
                 } else {
-                    // 云端成功加载后，合并本地新增的记录（防止未同步的新记录丢失）
-                    mergeLocalRecords(records);
+                    // 首次升级时兼容旧版未同步新增记录，之后以持久化同步队列为准。
+                    if (!localStorage.getItem('syncQueueInitialized')) {
+                        mergeLocalRecords(records);
+                        localStorage.setItem('syncQueueInitialized', '1');
+                    }
                     if (records.length === 0 && defaultRecords.length > 0) {
                         records = defaultRecords.slice();
                         showToast('默认数据已加载', 'success');
@@ -595,6 +697,7 @@
 
                 // 启动实时同步
                 startRealtime();
+                if (cloudOk && hasPendingSync()) saveToCloud(records, true);
             })();
         }
         if (sessionStorage.getItem('loggedIn') === '1') initApp();
@@ -654,11 +757,12 @@
                 id: genId(),
                 seq: dayRecords.length + 1,
                 date, name, project, price, qty,
-                total: price * qty,
+                total: money(price * qty),
                 paid, method, remark
             });
 
             invalidateFilterCache();
+            queueUpsert(records[records.length - 1]);
             saveData();
             saveToCloud(records, true);
             updateCustomerFilter();
@@ -679,38 +783,38 @@
         function updatePrice(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
-            r.price = Math.max(0, parseFloat(value) || 0);
-            r.total = r.price * r.qty;
-            invalidateFilterCache(); saveData(); saveToCloud(records, true);
+            r.price = money(Math.max(0, parseFloat(value) || 0));
+            r.total = money(r.price * r.qty);
+            invalidateFilterCache(); queueUpsert(r); saveData(); saveToCloud(records, true);
         }
 
         function updateName(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.name = value.trim();
-            invalidateFilterCache(); saveData(); saveToCloud(records, true); updateCustomerFilter();
+            invalidateFilterCache(); queueUpsert(r); saveData(); saveToCloud(records, true); updateCustomerFilter();
         }
 
         function updateProject(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.project = value.trim();
-            invalidateFilterCache(); saveData(); saveToCloud(records, true);
+            invalidateFilterCache(); queueUpsert(r); saveData(); saveToCloud(records, true);
         }
 
         function updateRemark(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.remark = value.trim();
-            invalidateFilterCache(); saveData(); saveToCloud(records, true);
+            invalidateFilterCache(); queueUpsert(r); saveData(); saveToCloud(records, true);
         }
 
         function updateQty(id, value) {
             const r = records.find(r => r.id === id);
             if (!r) return;
             r.qty = Math.max(1, parseInt(value) || 1);
-            r.total = r.price * r.qty;
-            invalidateFilterCache(); saveData(); saveToCloud(records, true);
+            r.total = money(r.price * r.qty);
+            invalidateFilterCache(); queueUpsert(r); saveData(); saveToCloud(records, true);
         }
 
         // FIX: 删除 updateTotal，总价只能由 price*qty 自动计算
@@ -732,6 +836,7 @@
             if (r.paid && !r.method) r.method = '微信';
             if (!r.paid) r.method = '';
 
+            queueUpsert(r);
             saveData();
             saveToCloud(records, true);
             updateRowDisplay(id);
@@ -763,6 +868,7 @@
             saveUndoStack();
             invalidateFilterCache();
             recalcSeq();
+            queueDelete(id);
             saveData();
             saveToCloud(records, true);
             updateCustomerFilter();
@@ -1307,6 +1413,7 @@
                 if (r) {
                     if (payStatus) { r.paid = '已付'; r.method = payMethod; }
                     else { r.paid = ''; r.method = ''; }
+                    queueUpsert(r);
                 }
             });
             invalidateFilterCache();
@@ -1329,6 +1436,7 @@
                 if (idx < 0) return;
                 const removed = records.splice(idx, 1)[0];
                 deletedStack.push({ record: removed, index: idx });
+                queueDelete(id);
             });
             if (deletedStack.length > APP_CONSTANTS.UNDO_MAX) deletedStack.splice(0, deletedStack.length - APP_CONSTANTS.UNDO_MAX);
             saveUndoStack();
@@ -1652,12 +1760,12 @@
                 for (let i = 1; i < lines.length; i++) {
                     const cols = parseCSVLine(lines[i]);
                     if (cols.length >= 8) {
-                        const price = parseFloat(cols[4]) || 0;
+                        const price = money(parseFloat(cols[4]) || 0);
                         const qty = parseInt(cols[5]) || 1;
                         newRecords.push({
                             id: genId(), seq: cols[0] || '', date: cols[1] || '', name: cols[2] || '',
                             project: cols[3] || '', price, qty,
-                            total: price * qty, // FIX: 强制重新计算
+                            total: money(price * qty), // FIX: 强制重新计算
                             paid: cols[7] === '未付' ? '' : cols[7], method: cols[8] || '', remark: cols[9] || ''
                         });
                     }
@@ -1665,11 +1773,13 @@
                 if (newRecords.length > 0) {
                     const choice = confirm('找到 ' + newRecords.length + ' 条记录。\n\n确定 = 覆盖现有数据\n取消 = 合并（追加到现有数据）');
                     if (choice) {
+                        queueAllDeletes(Array.from(_knownCloudIds).map(function(id) { return { id: id }; }));
                         records = newRecords;
                     } else {
                         records = records.concat(newRecords);
                     }
                     recalcSeq();
+                    queueAllUpserts(records);
                     invalidateFilterCache();
                     saveData(); saveToCloud(records, true); updateCustomerFilter(); batchRender();
                     showToast('恢复成功！共 ' + newRecords.length + ' 条记录', 'success');
@@ -1701,6 +1811,7 @@
         function clearAll() {
             if (!confirm('⚠️ 第一次确认：确定要清空所有 ' + records.length + ' 条记录吗？')) return;
             if (confirm('⚠️ 最终确认：此操作不可恢复，且无法撤销！\n\n建议先点「备份」保存一份。\n\n点「确定」立即清空，点「取消」放弃。')) {
+                queueAllDeletes(records);
                 records = [];
                 deletedStack = [];
                 saveUndoStack();
