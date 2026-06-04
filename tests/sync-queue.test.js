@@ -21,6 +21,7 @@ function element() {
 }
 
 const store = new Map();
+const authCalls = { reset: [], update: [] };
 const context = {
     console,
     crypto: webcrypto,
@@ -50,8 +51,16 @@ const context = {
         addEventListener() {},
         matchMedia() { return { matches: false, addEventListener() {} }; },
         innerWidth: 1024,
-        innerHeight: 768
+        innerHeight: 768,
+        location: {
+            origin: 'https://example.com',
+            pathname: '/logbook/',
+            hash: ''
+        },
+        history: { replaceState() {} }
     },
+    location: { reload() {} },
+    URLSearchParams,
     navigator: {},
     supabase: {
         createClient() {
@@ -59,6 +68,14 @@ const context = {
                 auth: {
                     async getSession() { return { data: { session: context.authSession } }; },
                     async signInWithPassword() { return { data: {}, error: null }; },
+                    async resetPasswordForEmail(email, options) {
+                        authCalls.reset.push({ email, options });
+                        return { data: {}, error: null };
+                    },
+                    async updateUser(values) {
+                        authCalls.update.push(values);
+                        return { data: {}, error: null };
+                    },
                     async signOut() {},
                     onAuthStateChange() { return { data: { subscription: { unsubscribe() {} } } }; }
                 },
@@ -82,6 +99,7 @@ const context = {
 };
 context.window.document = context.document;
 context.window.localStorage = context.localStorage;
+context.document.title = 'Test';
 context.globalThis = context;
 
 vm.createContext(context);
@@ -124,7 +142,21 @@ assert.equal(ids.size, 500);
 
     context.authSession = null;
     await assert.rejects(vm.runInContext('getAuthHeaders()', context), /登录已过期/);
-    console.log('sync queue and auth tests passed');
+
+    await vm.runInContext(`document.getElementById = function(id) {
+        if (!this._els) this._els = {};
+        if (!this._els[id]) this._els[id] = (${element.toString()})();
+        return this._els[id];
+    }; document.getElementById('loginEmail').value = 'admin@example.com'; requestPasswordReset();`, context);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(authCalls.reset[0].email, 'admin@example.com');
+    assert.equal(authCalls.reset[0].options.redirectTo, 'https://example.com/logbook/');
+
+    vm.runInContext(`document.getElementById('newPassword').value = '12345678'; document.getElementById('confirmPassword').value = '12345678'; updatePassword();`, context);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(authCalls.update[0].password, '12345678');
+
+    console.log('sync queue, auth, and password reset tests passed');
 })().catch(error => {
     console.error(error);
     process.exitCode = 1;

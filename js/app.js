@@ -27,6 +27,34 @@
         // ===== 1. Supabase Auth 登录验证 =====
         const sbClient = supabase.createClient(SB_URL, SB_KEY);
         let _appStarted = false;
+        let _passwordRecoveryMode = false;
+
+        function authRedirectUrl() {
+            return window.location.origin + window.location.pathname;
+        }
+
+        function showLoginMessage(message, type) {
+            const el = document.getElementById('loginError');
+            el.textContent = message;
+            el.className = 'login-error' + (type === 'success' ? ' success' : '');
+        }
+
+        function showPasswordResetForm() {
+            _passwordRecoveryMode = true;
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.getElementById('loginOverlay').style.display = '';
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('resetPasswordForm').classList.remove('hidden');
+            document.getElementById('newPassword').focus();
+        }
+
+        function showLoginForm(message) {
+            _passwordRecoveryMode = false;
+            document.getElementById('resetPasswordForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('loginOverlay').style.display = '';
+            if (message) showLoginMessage(message, 'success');
+        }
 
         async function doLogin() {
             const emailInput = document.getElementById('loginEmail');
@@ -59,7 +87,68 @@
             }
         }
 
+        async function requestPasswordReset() {
+            const emailInput = document.getElementById('loginEmail');
+            const email = emailInput.value.trim();
+            if (!email) {
+                showLoginMessage('请先填写邮箱地址');
+                emailInput.focus();
+                return;
+            }
+            localStorage.setItem('loginEmail', email);
+            showLoginMessage('正在发送重置邮件...', 'success');
+            try {
+                const result = await sbClient.auth.resetPasswordForEmail(email, { redirectTo: authRedirectUrl() });
+                if (result.error) throw result.error;
+                showLoginMessage('重置邮件已发送，请检查邮箱。链接有效期有限，请尽快打开。', 'success');
+            } catch (e) {
+                showLoginMessage('发送失败：' + e.message);
+            }
+        }
+
+        async function updatePassword() {
+            const password = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errEl = document.getElementById('resetPasswordError');
+            if (password.length < 6) {
+                errEl.textContent = '新密码至少需要 6 位';
+                return;
+            }
+            if (password !== confirmPassword) {
+                errEl.textContent = '两次输入的密码不一致';
+                return;
+            }
+            errEl.textContent = '正在保存...';
+            try {
+                const result = await sbClient.auth.updateUser({ password: password });
+                if (result.error) throw result.error;
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                await sbClient.auth.signOut();
+                clearAuthCallbackUrl();
+                showLoginForm('密码修改成功，请使用新密码登录');
+            } catch (e) {
+                errEl.textContent = '修改失败：' + e.message;
+            }
+        }
+
+        function clearAuthCallbackUrl() {
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState({}, document.title, authRedirectUrl());
+            }
+        }
+
+        function showAuthCallbackError() {
+            const params = new URLSearchParams(window.location.hash.slice(1));
+            const message = params.get('error_description');
+            if (!message) return false;
+            clearAuthCallbackUrl();
+            showLoginForm('重置链接无效或已过期，请重新发送');
+            return true;
+        }
+
         function startAuthenticatedApp() {
+            if (_passwordRecoveryMode) return;
             document.getElementById('loginOverlay').style.display = 'none';
             if (!_appStarted) {
                 _appStarted = true;
@@ -85,16 +174,29 @@
 
         async function bootstrapAuth() {
             document.getElementById('loginEmail').value = localStorage.getItem('loginEmail') || '';
+            if (showAuthCallbackError()) {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                return;
+            }
+            const hashParams = new URLSearchParams(window.location.hash.slice(1));
+            if (hashParams.get('type') === 'recovery') {
+                showPasswordResetForm();
+                return;
+            }
             const result = await sbClient.auth.getSession();
             if (result.data.session) startAuthenticatedApp();
             else document.getElementById('loadingOverlay').style.display = 'none';
         }
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && document.getElementById('loginOverlay').style.display !== 'none') doLogin();
+            if (e.key === 'Enter' && document.getElementById('loginOverlay').style.display !== 'none') {
+                if (_passwordRecoveryMode) updatePassword();
+                else doLogin();
+            }
         });
         sbClient.auth.onAuthStateChange(function(event, session) {
             if (event === 'SIGNED_OUT') document.getElementById('loginOverlay').style.display = '';
+            else if (event === 'PASSWORD_RECOVERY') showPasswordResetForm();
             else if (session) setTimeout(startAuthenticatedApp, 0);
         });
 
