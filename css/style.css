@@ -338,18 +338,18 @@
             .table-wrap { display: none; }
             .mobile-card-list { display: flex; flex: 1; min-height: 0; flex-direction: column; gap: 8px; overflow-y: auto; padding: 0 0 8px; -webkit-overflow-scrolling: touch; }
             .record-card { background: var(--color-bg-card); border: 1px solid var(--color-border-light); border-radius: 10px; padding: 10px 11px; box-shadow: none; }
-            .record-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-            .record-card-left { display: flex; align-items: flex-start; gap: 8px; min-width: 0; flex: 1; }
+            .record-card-header { display: flex; align-items: center; justify-content: space-between; gap: 7px; margin-bottom: 8px; }
+            .record-card-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
             .record-card-main { min-width: 0; flex: 1; }
             .record-card-title { font-size: 14px; font-weight: 700; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .record-card-date { font-size: 10px; color: var(--color-text-light); margin-right: auto; white-space: nowrap; }
             .record-card-status { font-size: 11px; white-space: nowrap; padding: 2px 7px; border-radius: 999px; background: transparent; border: 1px solid currentColor; line-height: 1.5; }
             .record-card-project { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            .record-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; padding: 7px 0; margin-bottom: 8px; border-top: 1px solid var(--color-bg); border-bottom: 1px solid var(--color-bg); }
-            .record-card-field { background: transparent; border-radius: 0; padding: 0 6px; min-width: 0; border-right: 1px solid var(--color-bg); }
+            .record-card-grid { display: grid; grid-template-columns: repeat(3, auto); gap: 6px; flex-shrink: 0; }
+            .record-card-field { background: transparent; border-radius: 0; padding: 0 0 0 6px; min-width: 0; border-right: 1px solid var(--color-bg); }
             .record-card-field:last-child { border-right: 0; }
-            .record-card-label { display: block; font-size: 10px; color: var(--color-text-light); margin-bottom: 2px; }
-            .record-card-value { font-size: 13px; font-weight: 700; color: var(--color-text); }
+            .record-card-label { display: block; font-size: 9px; color: var(--color-text-light); margin-bottom: 1px; }
+            .record-card-value { font-size: 12px; font-weight: 700; color: var(--color-text); white-space: nowrap; }
             .record-card-total .record-card-value { color: var(--color-danger); }
             .record-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
             .record-card-row.single { grid-template-columns: 1fr; }
@@ -358,7 +358,7 @@
             .record-card-actions { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 8px; }
             .record-card-actions .profile-btn,
             .record-card-actions .delete-btn { display: inline-flex !important; align-items: center; justify-content: center; padding: 5px 9px; font-size: 11px; border-radius: 7px; }
-            .record-card-check { width: 16px; height: 16px; accent-color: var(--color-primary); flex-shrink: 0; margin-top: 2px; }
+            .record-card-check { width: 16px; height: 16px; accent-color: var(--color-primary); flex-shrink: 0; }
             table { font-size: 13px; min-width: 580px; }
             th { padding: 10px 6px; font-size: 10px; }
             th:first-child, td:first-child { display: table-cell; width: 28px; min-width: 28px; padding: 8px 2px; }
@@ -489,7 +489,11 @@
         .profile-table-wrap { max-height: 55vh; overflow-y: auto; }
         .profile-filter { display: flex; gap: 6px; margin-bottom: 10px; }
         .profile-filter .btn-filter { padding: 5px 10px; font-size: 11px; }
-        .profile-filter .btn-filter.active { background: var(--color-primary); color: var(--color-bg-card); border-color: var(--color-primary); }
+        .profile-filter .btn-filter.active,
+        .profile-filter .btn-filter.active:hover,
+        .profile-filter .btn-filter.active:active,
+        .profile-filter .btn-filter.active:focus { background: var(--color-primary); color: var(--color-bg-card); border-color: var(--color-primary); }
+        .profile-filter .btn-filter:active { background: var(--color-bg-hover); color: var(--color-primary); border-color: var(--color-primary); }
         .customer-link { cursor: pointer; font-size: 13px; opacity: 0.5; transition: opacity .15s; }
         .customer-link:hover { opacity: 1; }
 
