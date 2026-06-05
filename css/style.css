@@ -363,19 +363,19 @@
             .record-card-actions .profile-btn,
             .record-card-actions .delete-btn { display: inline-flex !important; align-items: center; justify-content: center; padding: 5px 9px; font-size: 11px; border-radius: 7px; }
             .record-card-check { width: 16px; height: 16px; accent-color: var(--color-primary); flex-shrink: 0; }
-            table { font-size: 13px; min-width: 580px; }
-            th { padding: 10px 6px; font-size: 10px; }
-            th:first-child, td:first-child { display: table-cell; width: 28px; min-width: 28px; padding: 8px 2px; }
-            th:nth-child(2), td:nth-child(2) { display: none; }
-            th:nth-child(8), td:nth-child(8) { display: none; }
-            th:nth-child(9), td:nth-child(9) { display: none; }
-            th:nth-child(11), td:nth-child(11) { display: none; }
-            td { padding: 10px 6px; font-size: 12px; }
-            td:first-child input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--color-primary); }
+            .table-wrap table { font-size: 13px; min-width: 580px; }
+            .table-wrap th { padding: 10px 6px; font-size: 10px; }
+            .table-wrap th:first-child, .table-wrap td:first-child { display: table-cell; width: 28px; min-width: 28px; padding: 8px 2px; }
+            .table-wrap th:nth-child(2), .table-wrap td:nth-child(2) { display: none; }
+            .table-wrap th:nth-child(8), .table-wrap td:nth-child(8) { display: none; }
+            .table-wrap th:nth-child(9), .table-wrap td:nth-child(9) { display: none; }
+            .table-wrap th:nth-child(11), .table-wrap td:nth-child(11) { display: none; }
+            .table-wrap td { padding: 10px 6px; font-size: 12px; }
+            .table-wrap td:first-child input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--color-primary); }
             .profile-btn { display: none !important; }
             .delete-btn { padding: 5px 10px; font-size: 10px; border-radius: 6px; }
 
-            .toolbar { justify-content: center; margin: 12px 0; padding: 10px 12px; gap: 8px; border-radius: 8px; }
+            .toolbar { display: none; }
             .toolbar-group:first-child { display: none; }
             .toolbar-divider { display: none; }
             .tb-btn { padding: 6px 10px; font-size: 11px; border-radius: 6px; }

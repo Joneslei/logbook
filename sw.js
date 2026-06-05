@@ -4,7 +4,7 @@
  */
 
 // 使用日期作为版本号，更新代码时自动清除旧缓存
-const CACHE_VERSION = '20260605-mobile-cards-simple';
+const CACHE_VERSION = '20260605-mobile-profile-fix';
 const CACHE_NAME = 'accounting-app-v' + CACHE_VERSION;
 const CDN_CACHE_NAME = 'accounting-cdn-v' + CACHE_VERSION;
 
