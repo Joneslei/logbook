@@ -1347,15 +1347,15 @@
                     '<div class="record-card-header">' +
                         '<div class="record-card-left">' +
                             '<input type="checkbox" class="row-checkbox record-card-check" data-id="' + r.id + '" onchange="syncSelection(' + r.id + ', this.checked);updateSelectedStats()">' +
+                            '<div class="record-card-grid">' +
+                                '<div class="record-card-field"><span class="record-card-label">单价</span><span class="record-card-value">¥' + esc(r.price) + '</span></div>' +
+                                '<div class="record-card-field"><span class="record-card-label">数量</span><span class="record-card-value">' + esc(r.qty) + '</span></div>' +
+                                '<div class="record-card-field record-card-total"><span class="record-card-label">合计</span><span class="record-card-value">¥' + esc(r.total) + '</span></div>' +
+                            '</div>' +
                             '<div class="record-card-main">' +
                                 '<div class="record-card-title">' + esc(r.name) + '</div>' +
                                 '<div class="record-card-project">' + esc(r.project) + '</div>' +
                             '</div>' +
-                        '</div>' +
-                        '<div class="record-card-grid">' +
-                            '<div class="record-card-field"><span class="record-card-label">单价</span><span class="record-card-value">¥' + esc(r.price) + '</span></div>' +
-                            '<div class="record-card-field"><span class="record-card-label">数量</span><span class="record-card-value">' + esc(r.qty) + '</span></div>' +
-                            '<div class="record-card-field record-card-total"><span class="record-card-label">合计</span><span class="record-card-value">¥' + esc(r.total) + '</span></div>' +
                         '</div>' +
                         '<span class="record-card-status ' + (r.paid ? 'paid' : 'unpaid') + '">' + esc(paidText) + '</span>' +
                     '</div>' +
