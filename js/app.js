@@ -287,6 +287,31 @@
             _cloudSaveTimer = setTimeout(function() { saveToCloud(records); }, APP_CONSTANTS.CLOUD_SYNC_INTERVAL);
         }
         let _renderPending = false;
+        let _editingRecordId = null;
+        const _openMobileEditIds = new Set();
+
+        function restoreDesktopEditingState() {
+            if (!_editingRecordId) return;
+            const row = document.querySelector('tr[data-row-id="' + _editingRecordId + '"]');
+            if (!row) return;
+            row.classList.add('editing');
+            row.querySelectorAll('.edit-cell').forEach(function(cell) {
+                const display = cell.querySelector('.text-display');
+                const input = cell.querySelector('.select-edit');
+                if (display) display.style.display = 'none';
+                if (input) input.style.display = 'inline-block';
+            });
+        }
+
+        function syncMobileEditState(details) {
+            const card = details.closest('.record-card');
+            if (!card) return;
+            const id = parseInt(card.getAttribute('data-row-id'));
+            if (Number.isNaN(id)) return;
+            if (details.open) _openMobileEditIds.add(id);
+            else _openMobileEditIds.delete(id);
+        }
+
         function batchRender() {
             if (_renderPending) return;
             _renderPending = true;
@@ -1398,6 +1423,7 @@
             // 清空并批量插入
             tbody.innerHTML = '';
             tbody.appendChild(fragment);
+            restoreDesktopEditingState();
             renderMobileCards(filtered, mobileCards);
 
             renderPagination(totalFiltered);
@@ -1428,7 +1454,7 @@
                         '<span class="mobile-card-qty-text">数量 ' + esc(r.qty) + '</span>' +
                         (r.method ? '<span>' + esc(r.method) + '</span>' : '') +
                     '</div>' +
-                    '<details class="record-card-edit">' +
+                    '<details class="record-card-edit" ' + (_openMobileEditIds.has(r.id) ? 'open' : '') + ' ontoggle="syncMobileEditState(this)">' +
                         '<summary>编辑记录</summary>' +
                         '<div class="record-card-row">' +
                             '<input type="text" value="' + esc(r.name) + '" aria-label="客户名称" onchange="updateName(' + r.id + ', this.value);batchRender()">' +
@@ -1615,6 +1641,7 @@
             const isEditing = row.classList.toggle('editing');
 
             if (isEditing) {
+                _editingRecordId = id;
                 // 只显示客户名称、项目、单价、数量、备注的编辑框
                 row.querySelectorAll('.edit-cell').forEach(cell => {
                     const display = cell.querySelector('.text-display');
@@ -1635,6 +1662,7 @@
                     }
                 });
             } else {
+                _editingRecordId = null;
                 // 隐藏所有编辑框
                 row.querySelectorAll('.edit-cell').forEach(cell => {
                     const display = cell.querySelector('.text-display');
@@ -1653,6 +1681,7 @@
             const editingRow = document.querySelector('tr.editing');
             if (editingRow && !e.target.closest('tr.editing') && !e.target.closest('.edit-btn')) {
                 const id = editingRow.querySelector('.row-checkbox')?.dataset.id;
+                _editingRecordId = null;
                 editingRow.classList.remove('editing');
                 editingRow.querySelectorAll('.edit-cell').forEach(cell => {
                     const display = cell.querySelector('.text-display');
