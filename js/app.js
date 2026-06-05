@@ -981,24 +981,45 @@
             if (qty) qty.textContent = '数量 ' + r.qty;
         }
 
-        function updateMobileNumberInput(input, id, field) {
+        function refreshDesktopRowNumbers(id) {
+            const r = records.find(r => r.id === id);
+            const row = document.querySelector('tr[data-row-id="' + id + '"]');
+            if (!r || !row) return;
+            const price = row.querySelector('.desktop-price-text');
+            const qty = row.querySelector('.desktop-qty-text');
+            const total = row.querySelector('.desktop-total-text');
+            if (price) price.textContent = '¥' + r.price;
+            if (qty) qty.textContent = r.qty;
+            if (total) total.textContent = '¥' + r.total;
+        }
+
+        function updateNumberInput(input, id, field) {
             if (field === 'price') updatePrice(id, input.value);
             else updateQty(id, input.value);
+            refreshDesktopRowNumbers(id);
             refreshMobileRecordCard(id);
             updateStats();
             updateSelectedStats();
         }
 
-        function stepMobileNumber(btn, id, field, delta, min, precision) {
+        function stepNumberControl(event, btn, id, field, delta, min, precision) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             const input = btn.parentElement.querySelector('input');
             if (!input) return;
             const current = Number(input.value) || 0;
             const next = Math.max(min, current + delta);
             input.value = formatStepValue(next, precision);
-            updateMobileNumberInput(input, id, field);
+            updateNumberInput(input, id, field);
         }
 
-        function stepFormNumber(inputId, delta, min, precision) {
+        function stepFormNumber(event, inputId, delta, min, precision) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             const input = document.getElementById(inputId);
             if (!input) return;
             const current = Number(input.value) || 0;
@@ -1340,14 +1361,22 @@
                         '<input type="text" class="inline-select select-edit" value="' + esc(r.project) + '" onchange="updateProject(' + r.id + ', this.value)">' +
                     '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
-                        '<span class="text-display">¥' + r.price + '</span>' +
-                        '<input type="number" class="inline-select select-edit" value="' + r.price + '" onchange="updatePrice(' + r.id + ', this.value)">' +
+                        '<span class="text-display desktop-price-text">¥' + r.price + '</span>' +
+                        '<div class="inline-number-field select-edit">' +
+                            '<button type="button" class="inline-step-btn" aria-label="减少单价" onpointerdown="event.stopPropagation()" onclick="stepNumberControl(event, this, ' + r.id + ', \'price\', -1, 0, 2)">-</button>' +
+                            '<input type="number" inputmode="decimal" value="' + r.price + '" onchange="updateNumberInput(this, ' + r.id + ', \'price\')" onclick="event.stopPropagation()">' +
+                            '<button type="button" class="inline-step-btn" aria-label="增加单价" onpointerdown="event.stopPropagation()" onclick="stepNumberControl(event, this, ' + r.id + ', \'price\', 1, 0, 2)">+</button>' +
+                        '</div>' +
                     '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
-                        '<span class="text-display">' + r.qty + '</span>' +
-                        '<input type="number" class="inline-select select-edit" value="' + r.qty + '" min="1" onchange="updateQty(' + r.id + ', this.value)">' +
+                        '<span class="text-display desktop-qty-text">' + r.qty + '</span>' +
+                        '<div class="inline-number-field select-edit">' +
+                            '<button type="button" class="inline-step-btn" aria-label="减少数量" onpointerdown="event.stopPropagation()" onclick="stepNumberControl(event, this, ' + r.id + ', \'qty\', -1, 1, 0)">-</button>' +
+                            '<input type="number" inputmode="numeric" value="' + r.qty + '" min="1" onchange="updateNumberInput(this, ' + r.id + ', \'qty\')" onclick="event.stopPropagation()">' +
+                            '<button type="button" class="inline-step-btn" aria-label="增加数量" onpointerdown="event.stopPropagation()" onclick="stepNumberControl(event, this, ' + r.id + ', \'qty\', 1, 1, 0)">+</button>' +
+                        '</div>' +
                     '</td>' +
-                    '<td>¥' + r.total + '</td>' +
+                    '<td class="desktop-total-text">¥' + r.total + '</td>' +
                     '<td style="position:relative;" onmouseenter="showEdit(this)" onmouseleave="hideEdit(this)" onclick="mobileEditCell(this)">' +
                         '<span class="pay-display ' + (r.paid ? 'paid' : 'unpaid') + '">' + esc(r.paid || '未付') + '</span>' +
                         '<select class="inline-select pay-edit" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:90%;" onchange="markRowDirty(' + r.id + ')" onclick="event.stopPropagation()">' +
@@ -1415,14 +1444,14 @@
                         '</div>' +
                         '<div class="record-card-row">' +
                             '<div class="mobile-number-field">' +
-                                '<button type="button" class="mobile-step-btn" aria-label="减少单价" onclick="stepMobileNumber(this, ' + r.id + ', \'price\', -1, 0, 2)">-</button>' +
-                                '<input type="number" inputmode="decimal" value="' + esc(r.price) + '" aria-label="单价" onchange="updateMobileNumberInput(this, ' + r.id + ', \'price\')">' +
-                                '<button type="button" class="mobile-step-btn" aria-label="增加单价" onclick="stepMobileNumber(this, ' + r.id + ', \'price\', 1, 0, 2)">+</button>' +
+                                '<button type="button" class="mobile-step-btn" aria-label="减少单价" onpointerdown="event.stopPropagation()" onclick="stepNumberControl(event, this, ' + r.id + ', \'price\', -1, 0, 2)">-</button>' +
+                                '<input type="number" inputmode="decimal" value="' + esc(r.price) + '" aria-label="单价" onchange="updateNumberInput(this, ' + r.id + ', \'price\')" onclick="event.stopPropagation()">' +
+                                '<button type="button" class="mobile-step-btn" aria-label="增加单价" onpointerdown="event.stopPropagation()" onclick="stepNumberControl(event, this, ' + r.id + ', \'price\', 1, 0, 2)">+</button>' +
                             '</div>' +
                             '<div class="mobile-number-field">' +
-                                '<button type="button" class="mobile-step-btn" aria-label="减少数量" onclick="stepMobileNumber(this, ' + r.id + ', \'qty\', -1, 1, 0)">-</button>' +
-                                '<input type="number" inputmode="numeric" value="' + esc(r.qty) + '" min="1" aria-label="数量" onchange="updateMobileNumberInput(this, ' + r.id + ', \'qty\')">' +
-                                '<button type="button" class="mobile-step-btn" aria-label="增加数量" onclick="stepMobileNumber(this, ' + r.id + ', \'qty\', 1, 1, 0)">+</button>' +
+                                '<button type="button" class="mobile-step-btn" aria-label="减少数量" onpointerdown="event.stopPropagation()" onclick="stepNumberControl(event, this, ' + r.id + ', \'qty\', -1, 1, 0)">-</button>' +
+                                '<input type="number" inputmode="numeric" value="' + esc(r.qty) + '" min="1" aria-label="数量" onchange="updateNumberInput(this, ' + r.id + ', \'qty\')" onclick="event.stopPropagation()">' +
+                                '<button type="button" class="mobile-step-btn" aria-label="增加数量" onpointerdown="event.stopPropagation()" onclick="stepNumberControl(event, this, ' + r.id + ', \'qty\', 1, 1, 0)">+</button>' +
                             '</div>' +
                         '</div>' +
                         '<div class="record-card-row">' +
@@ -1599,7 +1628,7 @@
                     const display = cell.querySelector('.text-display');
                     const input = cell.querySelector('.select-edit');
                     if (display) display.style.display = 'none';
-                    if (input) input.style.display = 'inline-block';
+                    if (input) input.style.display = input.classList.contains('inline-number-field') ? 'grid' : 'inline-block';
                 });
                 // 标记当前编辑行
                 document.querySelectorAll('tr.editing').forEach(tr => {

@@ -238,11 +238,27 @@
             z-index: 10; width: 85%; min-width: 60px; padding: 4px 6px;
             border: 1.5px solid var(--color-primary); border-radius: 6px; font-size: 12px; background: var(--color-bg-card);
         }
+        .edit-cell .inline-number-field {
+            display: none; grid-template-columns: 24px minmax(44px, 1fr) 24px; gap: 3px;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            z-index: 10; width: 96%; min-width: 92px; padding: 0; border: 0; background: transparent;
+        }
+        .inline-number-field input {
+            min-width: 0; width: 100%; padding: 4px 3px; text-align: center;
+            border: 1.5px solid var(--color-primary); border-radius: 6px; background: var(--color-bg-card); color: var(--color-text);
+        }
+        .inline-step-btn {
+            border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg-card);
+            color: var(--color-text-secondary); font-weight: 700; cursor: pointer; line-height: 1;
+        }
+        .inline-step-btn:active { background: var(--color-primary); color: var(--color-bg-card); border-color: var(--color-primary); }
         .edit-cell.mobile-active .text-display { display: none; }
         .edit-cell.mobile-active .select-edit { display: inline-block; position: static; transform: none; width: 100%; }
+        .edit-cell.mobile-active .inline-number-field.select-edit { display: grid; position: static; transform: none; width: 100%; }
         /* 编辑模式 */
         tr.editing .edit-cell .text-display { display: none; }
         tr.editing .edit-cell .select-edit { display: inline-block; }
+        tr.editing .edit-cell .inline-number-field.select-edit { display: grid; }
         tr.editing .profile-btn { display: none; }
         tr.editing .edit-btn { display: none; }
         .inline-select { padding: 3px 6px; font-size: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg-card); }
