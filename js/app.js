@@ -1352,12 +1352,12 @@
                                 '<div class="record-card-field"><span class="record-card-label">数量</span><span class="record-card-value">' + esc(r.qty) + '</span></div>' +
                                 '<div class="record-card-field record-card-total"><span class="record-card-label">合计</span><span class="record-card-value">¥' + esc(r.total) + '</span></div>' +
                             '</div>' +
-                            '<div class="record-card-main">' +
-                                '<div class="record-card-title">' + esc(r.name) + '</div>' +
-                                '<div class="record-card-project">' + esc(r.project) + '</div>' +
-                            '</div>' +
                         '</div>' +
                         '<span class="record-card-status ' + (r.paid ? 'paid' : 'unpaid') + '">' + esc(paidText) + '</span>' +
+                    '</div>' +
+                    '<div class="record-card-main">' +
+                        '<div class="record-card-title">' + esc(r.name) + '</div>' +
+                        '<div class="record-card-project">' + esc(r.project) + '</div>' +
                     '</div>' +
                     '<div class="record-card-row">' +
                         '<input type="text" value="' + esc(r.name) + '" aria-label="客户名称" onchange="updateName(' + r.id + ', this.value);batchRender()">' +
