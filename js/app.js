@@ -960,6 +960,16 @@
             invalidateFilterCache(); queueUpsert(r); saveData(); saveToCloud(records, true);
         }
 
+        function updatePayment(id, paidValue, methodValue) {
+            const r = records.find(r => r.id === id);
+            if (!r) return;
+            r.paid = paidValue ? '已付' : '';
+            r.method = r.paid ? (methodValue || r.method || '微信') : '';
+            invalidateFilterCache(); queueUpsert(r); saveData(); saveToCloud(records, true);
+            updateStats();
+            updateCustomerFilter();
+        }
+
         // FIX: 删除 updateTotal，总价只能由 price*qty 自动计算
 
         function markRowDirty(id) { dirtyRows.add(id); }
@@ -1240,6 +1250,7 @@
 
         function renderTable() {
             const tbody = document.getElementById('recordTable');
+            const mobileCards = document.getElementById('mobileRecordCards');
             const allFiltered = sortRecords(getFilteredRecords());
             const totalFiltered = allFiltered.length;
             const totalPages = Math.max(1, Math.ceil(totalFiltered / APP_CONSTANTS.PAGE_SIZE));
@@ -1255,6 +1266,7 @@
 
             if (filtered.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px;">暂无记录</td></tr>';
+                if (mobileCards) mobileCards.innerHTML = '<div class="record-card" style="text-align:center;color:#94a3b8;padding:30px;">暂无记录</div>';
                 renderPagination(totalFiltered);
                 return;
             }
@@ -1318,8 +1330,57 @@
             // 清空并批量插入
             tbody.innerHTML = '';
             tbody.appendChild(fragment);
+            renderMobileCards(filtered, mobileCards);
 
             renderPagination(totalFiltered);
+        }
+
+        function renderMobileCards(filtered, container) {
+            if (!container) return;
+            container.innerHTML = filtered.map(function(r) {
+                const paidText = r.paid || '未付';
+                const methodOptions = ['', '微信', '支付宝', '现金', '建行码', '备注'].map(function(method) {
+                    return '<option value="' + esc(method) + '" ' + (r.method === method ? 'selected' : '') + '>' + esc(method || '付款方式') + '</option>';
+                }).join('');
+                return '<article class="record-card" data-row-id="' + r.id + '">' +
+                    '<div class="record-card-header">' +
+                        '<div class="record-card-left">' +
+                            '<input type="checkbox" class="row-checkbox record-card-check" data-id="' + r.id + '" onchange="syncSelection(' + r.id + ', this.checked);updateSelectedStats()">' +
+                            '<div style="min-width:0;">' +
+                                '<div class="record-card-title">' + esc(r.name) + '</div>' +
+                                '<div class="record-card-date">' + esc(r.date) + ' · #' + esc(r.seq) + '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<span class="record-card-status ' + (r.paid ? 'paid' : 'unpaid') + '">' + esc(paidText) + '</span>' +
+                    '</div>' +
+                    '<div class="record-card-project">' + esc(r.project) + '</div>' +
+                    '<div class="record-card-grid">' +
+                        '<div class="record-card-field"><span class="record-card-label">单价</span><span class="record-card-value">¥' + esc(r.price) + '</span></div>' +
+                        '<div class="record-card-field"><span class="record-card-label">数量</span><span class="record-card-value">' + esc(r.qty) + '</span></div>' +
+                        '<div class="record-card-field record-card-total"><span class="record-card-label">合计</span><span class="record-card-value">¥' + esc(r.total) + '</span></div>' +
+                    '</div>' +
+                    '<div class="record-card-row">' +
+                        '<input type="text" value="' + esc(r.name) + '" aria-label="客户名称" onchange="updateName(' + r.id + ', this.value);batchRender()">' +
+                        '<input type="text" value="' + esc(r.project) + '" aria-label="项目" onchange="updateProject(' + r.id + ', this.value);batchRender()">' +
+                    '</div>' +
+                    '<div class="record-card-row">' +
+                        '<input type="number" value="' + esc(r.price) + '" aria-label="单价" onchange="updatePrice(' + r.id + ', this.value);batchRender()">' +
+                        '<input type="number" value="' + esc(r.qty) + '" min="1" aria-label="数量" onchange="updateQty(' + r.id + ', this.value);batchRender()">' +
+                    '</div>' +
+                    '<div class="record-card-row">' +
+                        '<select aria-label="付款情况" onchange="var method=this.closest(\'.record-card\').querySelector(\'.card-method\');updatePayment(' + r.id + ', this.value, method ? method.value : \'\');batchRender()">' +
+                            '<option value="" ' + (r.paid ? '' : 'selected') + '>未付</option>' +
+                            '<option value="已付" ' + (r.paid ? 'selected' : '') + '>已付</option>' +
+                        '</select>' +
+                        '<select class="card-method" aria-label="付款方式" onchange="updatePayment(' + r.id + ', this.value ? \'已付\' : \'\', this.value);batchRender()">' + methodOptions + '</select>' +
+                    '</div>' +
+                    '<div class="record-card-row single"><input type="text" value="' + esc(r.remark || '') + '" aria-label="备注" placeholder="备注" onchange="updateRemark(' + r.id + ', this.value);batchRender()"></div>' +
+                    '<div class="record-card-actions">' +
+                        '<button class="profile-btn" onclick="showCustomerProfile(this.dataset.name)" data-name="' + esc(r.name) + '">客户档案</button>' +
+                        '<button class="delete-btn" onclick="deleteRecord(' + r.id + ')">删除</button>' +
+                    '</div>' +
+                '</article>';
+            }).join('');
         }
 
         function updateStats() {
@@ -1524,6 +1585,20 @@
 
         // ===== 全选/批量 =====
 
+        function getSelectedRecordIds() {
+            const ids = new Set();
+            document.querySelectorAll('.row-checkbox:checked').forEach(function(cb) {
+                ids.add(parseInt(cb.getAttribute('data-id')));
+            });
+            return Array.from(ids).filter(function(id) { return !Number.isNaN(id); });
+        }
+
+        function syncSelection(id, checked) {
+            document.querySelectorAll('.row-checkbox[data-id="' + id + '"]').forEach(function(cb) {
+                cb.checked = checked;
+            });
+        }
+
         function toggleSelectAll() {
             const checked = document.getElementById('selectAll').checked;
             document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = checked);
@@ -1531,28 +1606,28 @@
         }
 
         function updateSelectedStats() {
-            const checked = document.querySelectorAll('.row-checkbox:checked');
+            const ids = getSelectedRecordIds();
             let selQty = 0, selAmount = 0;
-            checked.forEach(cb => {
-                const r = records.find(r => r.id === parseInt(cb.getAttribute('data-id')));
+            ids.forEach(id => {
+                const r = records.find(r => r.id === id);
                 if (r) { selQty += r.qty; selAmount += r.total; }
             });
-            document.getElementById('selectedRecords').textContent = checked.length;
+            document.getElementById('selectedRecords').textContent = ids.length;
             document.getElementById('selectedQty').textContent = selQty;
             document.getElementById('selectedAmount').textContent = '¥' + selAmount;
         }
 
         function batchPay() {
-            const checked = document.querySelectorAll('.row-checkbox:checked');
-            if (!checked.length) { showToast('请先勾选要修改的记录！', 'warning'); return; }
+            const ids = getSelectedRecordIds();
+            if (!ids.length) { showToast('请先勾选要修改的记录！', 'warning'); return; }
             const payStatus = document.getElementById('batchPayStatus').value;
             const payMethod = document.getElementById('batchPayMethod').value;
             const statusText = payStatus ? '已付' : '未付';
-            const confirmMsg = payStatus ? '确定将选中的 ' + checked.length + ' 条记录改为「' + statusText + ' - ' + payMethod + '」？' : '确定将选中的 ' + checked.length + ' 条记录改为「未付」（清空付款方式）？';
+            const confirmMsg = payStatus ? '确定将选中的 ' + ids.length + ' 条记录改为「' + statusText + ' - ' + payMethod + '」？' : '确定将选中的 ' + ids.length + ' 条记录改为「未付」（清空付款方式）？';
             if (!confirm(confirmMsg)) return;
 
-            checked.forEach(cb => {
-                const r = records.find(r => r.id === parseInt(cb.getAttribute('data-id')));
+            ids.forEach(id => {
+                const r = records.find(r => r.id === id);
                 if (r) {
                     if (payStatus) { r.paid = '已付'; r.method = payMethod; }
                     else { r.paid = ''; r.method = ''; }
@@ -1568,12 +1643,10 @@
         }
 
         function batchDelete() {
-            const checked = document.querySelectorAll('.row-checkbox:checked');
-            if (!checked.length) { showToast('请先勾选要删除的记录！', 'warning'); return; }
-            if (!confirm('确定删除选中的 ' + checked.length + ' 条记录？\n\n此操作可通过 Ctrl+Z 撤销。')) return;
+            const ids = getSelectedRecordIds();
+            if (!ids.length) { showToast('请先勾选要删除的记录！', 'warning'); return; }
+            if (!confirm('确定删除选中的 ' + ids.length + ' 条记录？\n\n此操作可通过 Ctrl+Z 撤销。')) return;
 
-            const ids = [];
-            checked.forEach(function(cb) { ids.push(parseInt(cb.getAttribute('data-id'))); });
             ids.forEach(function(id) {
                 const idx = records.findIndex(function(r) { return r.id === id; });
                 if (idx < 0) return;

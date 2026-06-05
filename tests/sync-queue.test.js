@@ -140,6 +140,19 @@ assert.equal(vm.runInContext('records.length', context), 1);
 assert.equal(vm.runInContext('records[0].name', context), 'A');
 assert.equal(vm.runInContext(`normalizeCloudRecord({ paid: '<img src=x onerror=alert(1)>' }).paid`, context), '');
 assert.equal(vm.runInContext(`cloudRecord({ id: 3, paid: '<img src=x onerror=alert(1)>' }).paid`, context), null);
+vm.runInContext(`
+    const mobileCards = { innerHTML: '' };
+    renderMobileCards([{ id: 4, seq: 1, date: '2026-06-05', name: 'B', project: 'Card', price: 2, qty: 3, total: 6, paid: '', method: '', remark: '<bad>' }], mobileCards);
+    globalThis.mobileCardHtml = mobileCards.innerHTML;
+`, context);
+assert.match(context.mobileCardHtml, /record-card/);
+assert.match(context.mobileCardHtml, /客户档案/);
+assert.doesNotMatch(context.mobileCardHtml, /<bad>/);
+vm.runInContext(`document.querySelector = function() { return { dataset: { paid: '' }, classList: { add() {}, remove() {} } }; };
+    records = [{ id: 5, seq: 1, date: '2026-06-05', name: 'C', project: 'Pay', price: 1, qty: 1, total: 1, paid: '', method: '' }];
+    updatePayment(5, '已付', '现金');`, context);
+assert.equal(vm.runInContext('records[0].paid', context), '已付');
+assert.equal(vm.runInContext('records[0].method', context), '现金');
 
 const ids = new Set();
 for (let i = 0; i < 500; i++) ids.add(vm.runInContext('genId()', context));
