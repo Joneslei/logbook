@@ -188,6 +188,23 @@
         }
         .tb-select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
+        .desktop-batch-pay {
+            display: none; align-items: center; justify-content: flex-end; gap: 10px;
+            margin: 10px 0 0; padding: 10px 12px;
+            background: var(--color-bg-highlight); border: 1px solid var(--color-primary); border-radius: 10px;
+        }
+        .desktop-batch-pay.show { display: flex; }
+        .desktop-batch-count { margin-right: auto; font-size: 13px; color: var(--color-text-secondary); font-weight: 600; }
+        .desktop-batch-select {
+            min-width: 92px; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 8px;
+            background: var(--color-bg-card); color: var(--color-text); font-size: 12px; cursor: pointer;
+        }
+        .desktop-batch-confirm {
+            padding: 8px 14px; border: 0; border-radius: 8px;
+            background: var(--color-primary); color: var(--color-bg-card); font-size: 12px; font-weight: 600; cursor: pointer;
+        }
+        .desktop-batch-confirm:hover { background: var(--color-primary-dark); }
+
         /* 表格 */
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th {
@@ -338,6 +355,7 @@
             .fab-overlay.show { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 499; }
 
             .table-wrap { display: none; }
+            .desktop-batch-pay { display: none !important; }
             .mobile-batch-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; padding: 8px 10px; background: var(--color-bg-card); border: 1px solid var(--color-border-light); border-radius: 10px; }
             .mobile-batch-btn { border: 1px solid var(--color-primary); color: var(--color-primary); background: var(--color-bg-card); border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 600; }
             .mobile-batch-count { font-size: 12px; color: var(--color-text-secondary); }

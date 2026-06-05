@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="theme-color" content="#1e40af">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/style.css?v=20260605-mobile-batch">
+    <link rel="stylesheet" href="css/style.css?v=20260605-desktop-batch">
 </head>
 <body>
     <!-- 登录页面 -->
@@ -203,6 +203,21 @@
                 <tbody id="recordTable"></tbody>
             </table>
         </div>
+        <div class="desktop-batch-pay" id="desktopBatchPay">
+            <span class="desktop-batch-count" id="desktopSelectedHint">未选择</span>
+            <select id="batchPayStatus" class="desktop-batch-select">
+                <option value="已付">已付</option>
+                <option value="">未付</option>
+            </select>
+            <select id="batchPayMethod" class="desktop-batch-select">
+                <option value="微信">微信</option>
+                <option value="支付宝">支付宝</option>
+                <option value="现金">现金</option>
+                <option value="建行码">建行码</option>
+                <option value="备注">备注</option>
+            </select>
+            <button class="desktop-batch-confirm" onclick="batchPay()">批量修改付款</button>
+        </div>
         <div class="mobile-batch-tools" id="mobileBatchTools">
             <button class="mobile-batch-btn" onclick="toggleMobilePageSelection()" id="mobileSelectPageBtn">本页全选</button>
             <span class="mobile-batch-count" id="mobileSelectedHint">未选择</span>
@@ -235,22 +250,6 @@
                 <button class="tb-btn tb-delete" onclick="batchDelete()">🗑️ 删除选中</button>
                 <button class="tb-btn tb-clear" onclick="clearAll()">⚠️ 清空全部</button>
                 <input type="file" id="restoreFile" accept=".csv" class="file-input-hidden" onchange="handleRestore(event)">
-            </div>
-            <div class="toolbar-divider"></div>
-            <div class="toolbar-group">
-                <span class="tb-label">批量付款</span>
-                <select id="batchPayStatus" class="tb-select">
-                    <option value="已付">已付</option>
-                    <option value="">未付</option>
-                </select>
-                <select id="batchPayMethod" class="tb-select">
-                    <option value="微信">微信</option>
-                    <option value="支付宝">支付宝</option>
-                    <option value="现金">现金</option>
-                    <option value="建行码">建行码</option>
-                    <option value="备注">备注</option>
-                </select>
-                <button class="tb-btn tb-batch" onclick="batchPay()">💰 确认</button>
             </div>
         </div>
         <div class="shortcuts-hint">
@@ -305,7 +304,7 @@
 
     <script src="js/config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <script src="js/app.js?v=20260605-mobile-batch"></script>
+    <script src="js/app.js?v=20260605-desktop-batch"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js?v=2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>

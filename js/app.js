@@ -1639,6 +1639,14 @@
             payBar.classList.toggle('show', ids.length > 0);
         }
 
+        function updateDesktopBatchTools(ids) {
+            const hint = document.getElementById('desktopSelectedHint');
+            const payBar = document.getElementById('desktopBatchPay');
+            if (!hint || !payBar) return;
+            hint.textContent = ids.length ? '已选 ' + ids.length + ' 条' : '未选择';
+            payBar.classList.toggle('show', ids.length > 0);
+        }
+
         function updateSelectedStats() {
             const ids = getSelectedRecordIds();
             let selQty = 0, selAmount = 0;
@@ -1649,6 +1657,7 @@
             document.getElementById('selectedRecords').textContent = ids.length;
             document.getElementById('selectedQty').textContent = selQty;
             document.getElementById('selectedAmount').textContent = '¥' + selAmount;
+            updateDesktopBatchTools(ids);
             updateMobileBatchTools(ids);
         }
 
