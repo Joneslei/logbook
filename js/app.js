@@ -1344,15 +1344,15 @@
                     return '<option value="' + esc(method) + '" ' + (r.method === method ? 'selected' : '') + '>' + esc(method || '付款方式') + '</option>';
                 }).join('');
                 return '<article class="record-card" data-row-id="' + r.id + '">' +
-                    '<div class="record-card-header">' +
-                        '<div class="record-card-left">' +
+                    '<div class="record-card-top">' +
+                        '<div class="record-card-title-row">' +
                             '<input type="checkbox" class="row-checkbox record-card-check" data-id="' + r.id + '" onchange="syncSelection(' + r.id + ', this.checked);updateSelectedStats()">' +
-                            '<div class="record-card-main">' +
+                            '<div class="record-card-text">' +
                                 '<div class="record-card-title">' + esc(r.name) + '</div>' +
                                 '<div class="record-card-project">' + esc(r.project) + '</div>' +
                             '</div>' +
+                            '<span class="record-card-status ' + (r.paid ? 'paid' : 'unpaid') + '">' + esc(paidText) + '</span>' +
                         '</div>' +
-                        '<span class="record-card-status ' + (r.paid ? 'paid' : 'unpaid') + '">' + esc(paidText) + '</span>' +
                     '</div>' +
                     '<div class="record-card-summary">' +
                         '<strong>¥' + esc(r.total) + '</strong>' +

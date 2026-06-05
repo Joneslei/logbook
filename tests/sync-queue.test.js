@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const { webcrypto } = require('node:crypto');
 
 function element() {
-    return {
+    const el = {
         style: {},
         classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
         addEventListener() {},
@@ -15,9 +15,13 @@ function element() {
         getAttribute() { return ''; },
         focus() {},
         value: '',
-        textContent: '',
         innerHTML: ''
     };
+    Object.defineProperty(el, 'textContent', {
+        get() { return this.innerHTML; },
+        set(value) { this.innerHTML = String(value || '').replace(/[&<>]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch])); }
+    });
+    return el;
 }
 
 const store = new Map();
@@ -147,6 +151,8 @@ vm.runInContext(`
 `, context);
 assert.match(context.mobileCardHtml, /record-card/);
 assert.match(context.mobileCardHtml, /客户档案/);
+assert.match(context.mobileCardHtml, /B/);
+assert.match(context.mobileCardHtml, /Card/);
 assert.doesNotMatch(context.mobileCardHtml, /<bad>/);
 vm.runInContext(`document.querySelector = function() { return { dataset: { paid: '' }, classList: { add() {}, remove() {} } }; };
     records = [{ id: 5, seq: 1, date: '2026-06-05', name: 'C', project: 'Pay', price: 1, qty: 1, total: 1, paid: '', method: '' }];
