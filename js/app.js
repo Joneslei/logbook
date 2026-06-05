@@ -1339,6 +1339,7 @@
             if (!container) return;
             container.innerHTML = filtered.map(function(r) {
                 const paidText = r.paid || '未付';
+                const metaText = esc(r.date) + ' · #' + esc(r.seq);
                 const methodOptions = ['', '微信', '支付宝', '现金', '建行码', '备注'].map(function(method) {
                     return '<option value="' + esc(method) + '" ' + (r.method === method ? 'selected' : '') + '>' + esc(method || '付款方式') + '</option>';
                 }).join('');
@@ -1346,14 +1347,13 @@
                     '<div class="record-card-header">' +
                         '<div class="record-card-left">' +
                             '<input type="checkbox" class="row-checkbox record-card-check" data-id="' + r.id + '" onchange="syncSelection(' + r.id + ', this.checked);updateSelectedStats()">' +
-                            '<div style="min-width:0;">' +
+                            '<div class="record-card-main">' +
                                 '<div class="record-card-title">' + esc(r.name) + '</div>' +
-                                '<div class="record-card-date">' + esc(r.date) + ' · #' + esc(r.seq) + '</div>' +
+                                '<div class="record-card-project">' + esc(r.project) + '</div>' +
                             '</div>' +
                         '</div>' +
                         '<span class="record-card-status ' + (r.paid ? 'paid' : 'unpaid') + '">' + esc(paidText) + '</span>' +
                     '</div>' +
-                    '<div class="record-card-project">' + esc(r.project) + '</div>' +
                     '<div class="record-card-grid">' +
                         '<div class="record-card-field"><span class="record-card-label">单价</span><span class="record-card-value">¥' + esc(r.price) + '</span></div>' +
                         '<div class="record-card-field"><span class="record-card-label">数量</span><span class="record-card-value">' + esc(r.qty) + '</span></div>' +
@@ -1376,6 +1376,7 @@
                     '</div>' +
                     '<div class="record-card-row single"><input type="text" value="' + esc(r.remark || '') + '" aria-label="备注" placeholder="备注" onchange="updateRemark(' + r.id + ', this.value);batchRender()"></div>' +
                     '<div class="record-card-actions">' +
+                        '<span class="record-card-date">' + metaText + '</span>' +
                         '<button class="profile-btn" onclick="showCustomerProfile(this.dataset.name)" data-name="' + esc(r.name) + '">客户档案</button>' +
                         '<button class="delete-btn" onclick="deleteRecord(' + r.id + ')">删除</button>' +
                     '</div>' +
