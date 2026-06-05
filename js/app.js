@@ -1347,34 +1347,38 @@
                     '<div class="record-card-header">' +
                         '<div class="record-card-left">' +
                             '<input type="checkbox" class="row-checkbox record-card-check" data-id="' + r.id + '" onchange="syncSelection(' + r.id + ', this.checked);updateSelectedStats()">' +
-                            '<div class="record-card-grid">' +
-                                '<div class="record-card-field"><span class="record-card-label">单价</span><span class="record-card-value">¥' + esc(r.price) + '</span></div>' +
-                                '<div class="record-card-field"><span class="record-card-label">数量</span><span class="record-card-value">' + esc(r.qty) + '</span></div>' +
-                                '<div class="record-card-field record-card-total"><span class="record-card-label">合计</span><span class="record-card-value">¥' + esc(r.total) + '</span></div>' +
+                            '<div class="record-card-main">' +
+                                '<div class="record-card-title">' + esc(r.name) + '</div>' +
+                                '<div class="record-card-project">' + esc(r.project) + '</div>' +
                             '</div>' +
                         '</div>' +
                         '<span class="record-card-status ' + (r.paid ? 'paid' : 'unpaid') + '">' + esc(paidText) + '</span>' +
                     '</div>' +
-                    '<div class="record-card-main">' +
-                        '<div class="record-card-title">' + esc(r.name) + '</div>' +
-                        '<div class="record-card-project">' + esc(r.project) + '</div>' +
+                    '<div class="record-card-summary">' +
+                        '<strong>¥' + esc(r.total) + '</strong>' +
+                        '<span>单价 ¥' + esc(r.price) + '</span>' +
+                        '<span>数量 ' + esc(r.qty) + '</span>' +
+                        (r.method ? '<span>' + esc(r.method) + '</span>' : '') +
                     '</div>' +
-                    '<div class="record-card-row">' +
-                        '<input type="text" value="' + esc(r.name) + '" aria-label="客户名称" onchange="updateName(' + r.id + ', this.value);batchRender()">' +
-                        '<input type="text" value="' + esc(r.project) + '" aria-label="项目" onchange="updateProject(' + r.id + ', this.value);batchRender()">' +
-                    '</div>' +
-                    '<div class="record-card-row">' +
-                        '<input type="number" value="' + esc(r.price) + '" aria-label="单价" onchange="updatePrice(' + r.id + ', this.value);batchRender()">' +
-                        '<input type="number" value="' + esc(r.qty) + '" min="1" aria-label="数量" onchange="updateQty(' + r.id + ', this.value);batchRender()">' +
-                    '</div>' +
-                    '<div class="record-card-row">' +
-                        '<select aria-label="付款情况" onchange="var method=this.closest(\'.record-card\').querySelector(\'.card-method\');updatePayment(' + r.id + ', this.value, method ? method.value : \'\');batchRender()">' +
-                            '<option value="" ' + (r.paid ? '' : 'selected') + '>未付</option>' +
-                            '<option value="已付" ' + (r.paid ? 'selected' : '') + '>已付</option>' +
-                        '</select>' +
-                        '<select class="card-method" aria-label="付款方式" onchange="updatePayment(' + r.id + ', this.value ? \'已付\' : \'\', this.value);batchRender()">' + methodOptions + '</select>' +
-                    '</div>' +
-                    '<div class="record-card-row single"><input type="text" value="' + esc(r.remark || '') + '" aria-label="备注" placeholder="备注" onchange="updateRemark(' + r.id + ', this.value);batchRender()"></div>' +
+                    '<details class="record-card-edit">' +
+                        '<summary>编辑记录</summary>' +
+                        '<div class="record-card-row">' +
+                            '<input type="text" value="' + esc(r.name) + '" aria-label="客户名称" onchange="updateName(' + r.id + ', this.value);batchRender()">' +
+                            '<input type="text" value="' + esc(r.project) + '" aria-label="项目" onchange="updateProject(' + r.id + ', this.value);batchRender()">' +
+                        '</div>' +
+                        '<div class="record-card-row">' +
+                            '<input type="number" value="' + esc(r.price) + '" aria-label="单价" onchange="updatePrice(' + r.id + ', this.value);batchRender()">' +
+                            '<input type="number" value="' + esc(r.qty) + '" min="1" aria-label="数量" onchange="updateQty(' + r.id + ', this.value);batchRender()">' +
+                        '</div>' +
+                        '<div class="record-card-row">' +
+                            '<select aria-label="付款情况" onchange="var method=this.closest(\'.record-card\').querySelector(\'.card-method\');updatePayment(' + r.id + ', this.value, method ? method.value : \'\');batchRender()">' +
+                                '<option value="" ' + (r.paid ? '' : 'selected') + '>未付</option>' +
+                                '<option value="已付" ' + (r.paid ? 'selected' : '') + '>已付</option>' +
+                            '</select>' +
+                            '<select class="card-method" aria-label="付款方式" onchange="updatePayment(' + r.id + ', this.value ? \'已付\' : \'\', this.value);batchRender()">' + methodOptions + '</select>' +
+                        '</div>' +
+                        '<div class="record-card-row single"><input type="text" value="' + esc(r.remark || '') + '" aria-label="备注" placeholder="备注" onchange="updateRemark(' + r.id + ', this.value);batchRender()"></div>' +
+                    '</details>' +
                     '<div class="record-card-actions">' +
                         '<span class="record-card-date">' + metaText + '</span>' +
                         '<button class="profile-btn" onclick="showCustomerProfile(this.dataset.name)" data-name="' + esc(r.name) + '">客户档案</button>' +

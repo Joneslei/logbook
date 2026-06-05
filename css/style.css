@@ -338,9 +338,9 @@
             .table-wrap { display: none; }
             .mobile-card-list { display: flex; flex: 1; min-height: 0; flex-direction: column; gap: 8px; overflow-y: auto; padding: 0 0 8px; -webkit-overflow-scrolling: touch; }
             .record-card { background: var(--color-bg-card); border: 1px solid var(--color-border-light); border-radius: 10px; padding: 10px 11px; box-shadow: none; }
-            .record-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+            .record-card-header { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
             .record-card-left { display: flex; align-items: center; gap: 7px; min-width: 0; flex: 1 1 auto; }
-            .record-card-main { min-width: 0; margin-bottom: 7px; }
+            .record-card-main { min-width: 0; flex: 1; }
             .record-card-title { font-size: 14px; font-weight: 700; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .record-card-date { font-size: 10px; color: var(--color-text-light); margin-right: auto; white-space: nowrap; }
             .record-card-status { font-size: 11px; white-space: nowrap; padding: 2px 7px; border-radius: 999px; background: transparent; border: 1px solid currentColor; line-height: 1.5; margin-left: auto; flex-shrink: 0; }
@@ -351,6 +351,10 @@
             .record-card-label { display: block; font-size: 9px; color: var(--color-text-light); margin-bottom: 1px; white-space: nowrap; }
             .record-card-value { display: block; font-size: 11px; font-weight: 700; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .record-card-total .record-card-value { color: var(--color-danger); }
+            .record-card-summary { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; padding: 5px 0 7px; color: var(--color-text-secondary); font-size: 12px; border-bottom: 1px solid var(--color-bg); }
+            .record-card-summary strong { color: var(--color-danger); font-size: 16px; }
+            .record-card-edit { margin-top: 6px; }
+            .record-card-edit summary { cursor: pointer; color: var(--color-primary); font-size: 12px; padding: 4px 0; user-select: none; }
             .record-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
             .record-card-row.single { grid-template-columns: 1fr; }
             .record-card input,
