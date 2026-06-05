@@ -287,6 +287,11 @@
             _cloudSaveTimer = setTimeout(function() { saveToCloud(records); }, APP_CONSTANTS.CLOUD_SYNC_INTERVAL);
         }
         let _renderPending = false;
+        // 分页导航 SVG 图标
+        const PAGE_ICON_FIRST = '<svg class="page-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4v12M15 5l-6 5 6 5"/></svg>';
+        const PAGE_ICON_PREV = '<svg class="page-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M13 5l-6 5 6 5"/></svg>';
+        const PAGE_ICON_NEXT = '<svg class="page-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5l6 5-6 5"/></svg>';
+        const PAGE_ICON_LAST = '<svg class="page-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M15 4v12M5 5l6 5-6 5"/></svg>';
         let _editingRecordId = null;
         const _openMobileEditIds = new Set();
 
@@ -501,14 +506,9 @@
             const el = document.getElementById('pagination');
             if (totalPages <= 1) { el.innerHTML = ''; return; }
 
-            const firstIcon = '<svg class="page-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4v12M15 5l-6 5 6 5"/></svg>';
-            const prevIcon = '<svg class="page-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M13 5l-6 5 6 5"/></svg>';
-            const nextIcon = '<svg class="page-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5l6 5-6 5"/></svg>';
-            const lastIcon = '<svg class="page-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M15 4v12M5 5l6 5-6 5"/></svg>';
-
             let html = '';
-            html += `<button class="page-nav" aria-label="第一页" onclick="goPage(1)" ${currentPage===1?'disabled':''}>${firstIcon}</button>`;
-            html += `<button class="page-nav" aria-label="上一页" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>${prevIcon}</button>`;
+            html += `<button class="page-nav" aria-label="第一页" onclick="goPage(1)" ${currentPage===1?'disabled':''}>${PAGE_ICON_FIRST}</button>`;
+            html += `<button class="page-nav" aria-label="上一页" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>${PAGE_ICON_PREV}</button>`;
 
             // 显示页码（最多7个）
             let start = Math.max(1, currentPage - 3);
@@ -518,8 +518,8 @@
                 html += `<button class="${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
             }
 
-            html += `<button class="page-nav" aria-label="下一页" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>${nextIcon}</button>`;
-            html += `<button class="page-nav" aria-label="最后一页" onclick="goPage(${totalPages})" ${currentPage===totalPages?'disabled':''}>${lastIcon}</button>`;
+            html += `<button class="page-nav" aria-label="下一页" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>${PAGE_ICON_NEXT}</button>`;
+            html += `<button class="page-nav" aria-label="最后一页" onclick="goPage(${totalPages})" ${currentPage===totalPages?'disabled':''}>${PAGE_ICON_LAST}</button>`;
             html += `<span class="page-info">${totalFiltered}条 / ${totalPages}页</span>`;
             el.innerHTML = html;
         }
@@ -868,6 +868,10 @@
                 const debouncedFilter = debounce(applyFilter, 300);
                 searchInput.addEventListener('input', debouncedFilter);
 
+                // 输入区总价预览
+                document.getElementById('inputPrice').addEventListener('input', updateFormTotal);
+                document.getElementById('inputQty').addEventListener('input', updateFormTotal);
+
                 // 启动实时同步
                 startRealtime();
                 if (cloudOk && hasPendingSync()) saveToCloud(records, true);
@@ -1006,6 +1010,16 @@
             if (qty) qty.textContent = '数量 ' + r.qty;
         }
 
+        function refreshMobileCardText(id) {
+            const r = records.find(r => r.id === id);
+            const card = document.querySelector('.record-card[data-row-id="' + id + '"]');
+            if (!r || !card) return;
+            const title = card.querySelector('.record-card-title');
+            const project = card.querySelector('.record-card-project');
+            if (title) title.textContent = r.name;
+            if (project) project.textContent = r.project;
+        }
+
         function refreshDesktopRowNumbers(id) {
             const r = records.find(r => r.id === id);
             const row = document.querySelector('tr[data-row-id="' + id + '"]');
@@ -1021,6 +1035,9 @@
         function updateNumberInput(input, id, field) {
             if (field === 'price') updatePrice(id, input.value);
             else updateQty(id, input.value);
+            // 防御性同步：确保变更入队
+            var r = records.find(function(r) { return r.id === id; });
+            if (r) queueUpsert(r);
             refreshDesktopRowNumbers(id);
             refreshMobileRecordCard(id);
             updateStats();
@@ -1050,6 +1067,14 @@
             const current = Number(input.value) || 0;
             const next = Math.max(min, current + delta);
             input.value = formatStepValue(next, precision);
+            updateFormTotal();
+        }
+
+        function updateFormTotal() {
+            const price = parseFloat(document.getElementById('inputPrice').value) || 0;
+            const qty = parseInt(document.getElementById('inputQty').value) || 1;
+            const el = document.getElementById('formTotalPreview');
+            if (el) el.textContent = price && qty ? '¥' + money(price * qty) : '';
         }
 
         function updatePayment(id, paidValue, methodValue) {
@@ -1107,6 +1132,7 @@
             if (!confirm('确定删除这条记录？')) return;
             const idx = records.findIndex(function(r) { return r.id === id; });
             if (idx < 0) return;
+            _openMobileEditIds.delete(id);
             const removed = records.splice(idx, 1)[0];
             deletedStack.push({ record: removed, index: idx });
             if (deletedStack.length > APP_CONSTANTS.UNDO_MAX) deletedStack.shift();
@@ -1457,8 +1483,8 @@
                     '<details class="record-card-edit" ' + (_openMobileEditIds.has(r.id) ? 'open' : '') + ' ontoggle="syncMobileEditState(this)">' +
                         '<summary>编辑记录</summary>' +
                         '<div class="record-card-row">' +
-                            '<input type="text" value="' + esc(r.name) + '" aria-label="客户名称" onchange="updateName(' + r.id + ', this.value);batchRender()">' +
-                            '<input type="text" value="' + esc(r.project) + '" aria-label="项目" onchange="updateProject(' + r.id + ', this.value);batchRender()">' +
+                            '<input type="text" value="' + esc(r.name) + '" aria-label="客户名称" onchange="updateName(' + r.id + ', this.value);refreshMobileCardText(' + r.id + ')">' +
+                            '<input type="text" value="' + esc(r.project) + '" aria-label="项目" onchange="updateProject(' + r.id + ', this.value);refreshMobileCardText(' + r.id + ')">' +
                         '</div>' +
                         '<div class="record-card-row">' +
                             '<div class="mobile-number-field">' +
@@ -1479,7 +1505,7 @@
                             '</select>' +
                             '<select class="card-method" aria-label="付款方式" onchange="updatePayment(' + r.id + ', this.value ? \'已付\' : \'\', this.value);batchRender()">' + methodOptions + '</select>' +
                         '</div>' +
-                        '<div class="record-card-row single"><input type="text" value="' + esc(r.remark || '') + '" aria-label="备注" placeholder="备注" onchange="updateRemark(' + r.id + ', this.value);batchRender()"></div>' +
+                        '<div class="record-card-row single"><input type="text" value="' + esc(r.remark || '') + '" aria-label="备注" placeholder="备注" onchange="updateRemark(' + r.id + ', this.value)"></div>' +
                     '</details>' +
                     '<div class="record-card-actions">' +
                         '<span class="record-card-date">' + metaText + '</span>' +
@@ -1804,6 +1830,7 @@
             ids.forEach(function(id) {
                 const idx = records.findIndex(function(r) { return r.id === id; });
                 if (idx < 0) return;
+                _openMobileEditIds.delete(id);
                 const removed = records.splice(idx, 1)[0];
                 deletedStack.push({ record: removed, index: idx });
                 queueDelete(id);
