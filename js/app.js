@@ -965,6 +965,15 @@
             invalidateFilterCache(); queueUpsert(r); saveData(); saveToCloud(records, true);
         }
 
+        function stepMobileNumber(btn, delta, min, precision) {
+            const input = btn.parentElement.querySelector('input');
+            if (!input) return;
+            const current = Number(input.value) || 0;
+            const next = Math.max(min, current + delta);
+            input.value = precision ? money(next).toFixed(precision).replace(/\.?0+$/, '') : String(Math.round(next));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
         function updatePayment(id, paidValue, methodValue) {
             const r = records.find(r => r.id === id);
             if (!r) return;
@@ -1373,8 +1382,16 @@
                             '<input type="text" value="' + esc(r.project) + '" aria-label="项目" onchange="updateProject(' + r.id + ', this.value);batchRender()">' +
                         '</div>' +
                         '<div class="record-card-row">' +
-                            '<input type="number" value="' + esc(r.price) + '" aria-label="单价" onchange="updatePrice(' + r.id + ', this.value);batchRender()">' +
-                            '<input type="number" value="' + esc(r.qty) + '" min="1" aria-label="数量" onchange="updateQty(' + r.id + ', this.value);batchRender()">' +
+                            '<div class="mobile-number-field">' +
+                                '<button type="button" class="mobile-step-btn" aria-label="减少单价" onclick="stepMobileNumber(this, -1, 0, 2)">-</button>' +
+                                '<input type="number" inputmode="decimal" value="' + esc(r.price) + '" aria-label="单价" onchange="updatePrice(' + r.id + ', this.value);batchRender()">' +
+                                '<button type="button" class="mobile-step-btn" aria-label="增加单价" onclick="stepMobileNumber(this, 1, 0, 2)">+</button>' +
+                            '</div>' +
+                            '<div class="mobile-number-field">' +
+                                '<button type="button" class="mobile-step-btn" aria-label="减少数量" onclick="stepMobileNumber(this, -1, 1, 0)">-</button>' +
+                                '<input type="number" inputmode="numeric" value="' + esc(r.qty) + '" min="1" aria-label="数量" onchange="updateQty(' + r.id + ', this.value);batchRender()">' +
+                                '<button type="button" class="mobile-step-btn" aria-label="增加数量" onclick="stepMobileNumber(this, 1, 1, 0)">+</button>' +
+                            '</div>' +
                         '</div>' +
                         '<div class="record-card-row">' +
                             '<select aria-label="付款情况" onchange="var method=this.closest(\'.record-card\').querySelector(\'.card-method\');updatePayment(' + r.id + ', this.value, method ? method.value : \'\');batchRender()">' +
