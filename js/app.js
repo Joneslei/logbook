@@ -1268,6 +1268,7 @@
                 tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px;">暂无记录</td></tr>';
                 if (mobileCards) mobileCards.innerHTML = '<div class="record-card" style="text-align:center;color:#94a3b8;padding:30px;">暂无记录</div>';
                 renderPagination(totalFiltered);
+                updateSelectedStats();
                 return;
             }
 
@@ -1610,6 +1611,34 @@
             updateSelectedStats();
         }
 
+        function getVisibleMobileRecordIds() {
+            return Array.from(document.querySelectorAll('#mobileRecordCards .row-checkbox')).map(function(cb) {
+                return parseInt(cb.getAttribute('data-id'));
+            }).filter(function(id) { return !Number.isNaN(id); });
+        }
+
+        function toggleMobilePageSelection() {
+            const ids = getVisibleMobileRecordIds();
+            if (!ids.length) return;
+            const selected = new Set(getSelectedRecordIds());
+            const shouldSelect = ids.some(function(id) { return !selected.has(id); });
+            ids.forEach(function(id) { syncSelection(id, shouldSelect); });
+            updateSelectedStats();
+        }
+
+        function updateMobileBatchTools(ids) {
+            const hint = document.getElementById('mobileSelectedHint');
+            const payBar = document.getElementById('mobileBatchPay');
+            const selectBtn = document.getElementById('mobileSelectPageBtn');
+            if (!hint || !payBar || !selectBtn) return;
+            const visibleIds = getVisibleMobileRecordIds();
+            const selected = new Set(ids);
+            const selectedVisible = visibleIds.filter(function(id) { return selected.has(id); }).length;
+            hint.textContent = ids.length ? '已选 ' + ids.length + ' 条' : '未选择';
+            selectBtn.textContent = visibleIds.length && selectedVisible === visibleIds.length ? '取消全选' : '本页全选';
+            payBar.classList.toggle('show', ids.length > 0);
+        }
+
         function updateSelectedStats() {
             const ids = getSelectedRecordIds();
             let selQty = 0, selAmount = 0;
@@ -1620,13 +1649,12 @@
             document.getElementById('selectedRecords').textContent = ids.length;
             document.getElementById('selectedQty').textContent = selQty;
             document.getElementById('selectedAmount').textContent = '¥' + selAmount;
+            updateMobileBatchTools(ids);
         }
 
-        function batchPay() {
+        function applyBatchPayment(payStatus, payMethod) {
             const ids = getSelectedRecordIds();
             if (!ids.length) { showToast('请先勾选要修改的记录！', 'warning'); return; }
-            const payStatus = document.getElementById('batchPayStatus').value;
-            const payMethod = document.getElementById('batchPayMethod').value;
             const statusText = payStatus ? '已付' : '未付';
             const confirmMsg = payStatus ? '确定将选中的 ' + ids.length + ' 条记录改为「' + statusText + ' - ' + payMethod + '」？' : '确定将选中的 ' + ids.length + ' 条记录改为「未付」（清空付款方式）？';
             if (!confirm(confirmMsg)) return;
@@ -1645,6 +1673,14 @@
             updateCustomerFilter();
             batchRender();
             showToast('批量修改完成！', 'success');
+        }
+
+        function batchPay() {
+            applyBatchPayment(document.getElementById('batchPayStatus').value, document.getElementById('batchPayMethod').value);
+        }
+
+        function batchPayMobile() {
+            applyBatchPayment(document.getElementById('mobileBatchPayStatus').value, document.getElementById('mobileBatchPayMethod').value);
         }
 
         function batchDelete() {
