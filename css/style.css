@@ -420,6 +420,7 @@
 
             .pagination { margin-top: 10px; gap: 4px; }
             .pagination button { padding: 7px 10px; font-size: 11px; border-radius: 6px; }
+            .pagination .page-nav { min-width: 38px; padding-left: 8px; padding-right: 8px; }
             .pagination .page-info { font-size: 11px; }
             .sync-status { top: 6px; bottom: auto !important; left: 10px; right: auto !important; transform: none; padding: 5px 12px; font-size: 10px; border-radius: 20px; }
             .toast-container { top: 10px; right: 10px; left: 10px; }
@@ -495,6 +496,8 @@
         .pagination button.active { background: var(--color-primary); color: var(--color-bg-card); border-color: var(--color-primary); }
         .pagination button:disabled { opacity: 0.3; cursor: not-allowed; }
         .pagination .page-info { font-size: 11px; color: var(--color-text-secondary); }
+        .pagination .page-nav { min-width: 40px; display: inline-flex; align-items: center; justify-content: center; }
+        .pagination .page-icon { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
         /* 工具类 - 替代内联样式 */
         .header-container {

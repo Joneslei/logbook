@@ -476,9 +476,14 @@
             const el = document.getElementById('pagination');
             if (totalPages <= 1) { el.innerHTML = ''; return; }
 
+            const firstIcon = '<svg class="page-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4v12M15 5l-6 5 6 5"/></svg>';
+            const prevIcon = '<svg class="page-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M13 5l-6 5 6 5"/></svg>';
+            const nextIcon = '<svg class="page-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5l6 5-6 5"/></svg>';
+            const lastIcon = '<svg class="page-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M15 4v12M5 5l6 5-6 5"/></svg>';
+
             let html = '';
-            html += `<button onclick="goPage(1)" ${currentPage===1?'disabled':''}>⏮</button>`;
-            html += `<button onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>◀</button>`;
+            html += `<button class="page-nav" aria-label="第一页" onclick="goPage(1)" ${currentPage===1?'disabled':''}>${firstIcon}</button>`;
+            html += `<button class="page-nav" aria-label="上一页" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>${prevIcon}</button>`;
 
             // 显示页码（最多7个）
             let start = Math.max(1, currentPage - 3);
@@ -488,8 +493,8 @@
                 html += `<button class="${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
             }
 
-            html += `<button onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>▶</button>`;
-            html += `<button onclick="goPage(${totalPages})" ${currentPage===totalPages?'disabled':''}>⏭</button>`;
+            html += `<button class="page-nav" aria-label="下一页" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>${nextIcon}</button>`;
+            html += `<button class="page-nav" aria-label="最后一页" onclick="goPage(${totalPages})" ${currentPage===totalPages?'disabled':''}>${lastIcon}</button>`;
             html += `<span class="page-info">${totalFiltered}条 / ${totalPages}页</span>`;
             el.innerHTML = html;
         }
