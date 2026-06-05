@@ -1035,9 +1035,6 @@
         function updateNumberInput(input, id, field) {
             if (field === 'price') updatePrice(id, input.value);
             else updateQty(id, input.value);
-            // 防御性同步：确保变更入队
-            var r = records.find(function(r) { return r.id === id; });
-            if (r) queueUpsert(r);
             refreshDesktopRowNumbers(id);
             refreshMobileRecordCard(id);
             updateStats();
