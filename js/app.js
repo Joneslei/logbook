@@ -1362,19 +1362,11 @@
                     '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
                         '<span class="text-display desktop-price-text">¥' + r.price + '</span>' +
-                        '<div class="inline-number-field select-edit">' +
-                            '<button type="button" class="inline-step-btn" aria-label="减少单价" onpointerdown="event.stopPropagation()" onclick="stepNumberControl(event, this, ' + r.id + ', \'price\', -1, 0, 2)">-</button>' +
-                            '<input type="number" inputmode="decimal" value="' + r.price + '" onchange="updateNumberInput(this, ' + r.id + ', \'price\')" onclick="event.stopPropagation()">' +
-                            '<button type="button" class="inline-step-btn" aria-label="增加单价" onpointerdown="event.stopPropagation()" onclick="stepNumberControl(event, this, ' + r.id + ', \'price\', 1, 0, 2)">+</button>' +
-                        '</div>' +
+                        '<input type="number" class="inline-select select-edit" inputmode="decimal" value="' + r.price + '" onchange="updateNumberInput(this, ' + r.id + ', \'price\')" onclick="event.stopPropagation()">' +
                     '</td>' +
                     '<td class="edit-cell" onclick="mobileEditCell(this)">' +
                         '<span class="text-display desktop-qty-text">' + r.qty + '</span>' +
-                        '<div class="inline-number-field select-edit">' +
-                            '<button type="button" class="inline-step-btn" aria-label="减少数量" onpointerdown="event.stopPropagation()" onclick="stepNumberControl(event, this, ' + r.id + ', \'qty\', -1, 1, 0)">-</button>' +
-                            '<input type="number" inputmode="numeric" value="' + r.qty + '" min="1" onchange="updateNumberInput(this, ' + r.id + ', \'qty\')" onclick="event.stopPropagation()">' +
-                            '<button type="button" class="inline-step-btn" aria-label="增加数量" onpointerdown="event.stopPropagation()" onclick="stepNumberControl(event, this, ' + r.id + ', \'qty\', 1, 1, 0)">+</button>' +
-                        '</div>' +
+                        '<input type="number" class="inline-select select-edit" inputmode="numeric" value="' + r.qty + '" min="1" onchange="updateNumberInput(this, ' + r.id + ', \'qty\')" onclick="event.stopPropagation()">' +
                     '</td>' +
                     '<td class="desktop-total-text">¥' + r.total + '</td>' +
                     '<td style="position:relative;" onmouseenter="showEdit(this)" onmouseleave="hideEdit(this)" onclick="mobileEditCell(this)">' +
@@ -1628,7 +1620,7 @@
                     const display = cell.querySelector('.text-display');
                     const input = cell.querySelector('.select-edit');
                     if (display) display.style.display = 'none';
-                    if (input) input.style.display = input.classList.contains('inline-number-field') ? 'grid' : 'inline-block';
+                    if (input) input.style.display = 'inline-block';
                 });
                 // 标记当前编辑行
                 document.querySelectorAll('tr.editing').forEach(tr => {
