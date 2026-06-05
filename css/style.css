@@ -191,8 +191,9 @@
         .desktop-batch-pay { display: none; }
         .desktop-batch-pay.show { display: table-row; }
         .desktop-batch-pay td {
+            position: sticky; bottom: 0; z-index: 11;
             background: var(--color-bg-highlight); border-top: 1px solid var(--color-primary); border-bottom: 1px solid var(--color-primary);
-            padding: 10px 8px; vertical-align: middle;
+            padding: 10px 8px; vertical-align: middle; box-shadow: 0 -4px 14px rgba(37,99,235,0.08);
         }
         .desktop-batch-pay td:first-child { border-left: 1px solid var(--color-primary); border-radius: 10px 0 0 10px; }
         .desktop-batch-pay td:last-child { border-right: 1px solid var(--color-primary); border-radius: 0 10px 10px 0; }
