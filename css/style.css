@@ -189,17 +189,21 @@
         .tb-select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
         .desktop-batch-pay {
-            display: none; align-items: center; justify-content: flex-end; gap: 10px;
+            display: none; align-items: center; gap: 8px;
+            grid-template-columns: 42px 70px 120px minmax(120px,1.1fr) minmax(150px,1.25fr) 80px 70px 80px 110px 110px minmax(120px,1fr) 120px;
             margin: 10px 0 0; padding: 10px 12px;
             background: var(--color-bg-highlight); border: 1px solid var(--color-primary); border-radius: 10px;
         }
-        .desktop-batch-pay.show { display: flex; }
-        .desktop-batch-count { margin-right: auto; font-size: 13px; color: var(--color-text-secondary); font-weight: 600; }
+        .desktop-batch-pay.show { display: grid; }
+        .desktop-batch-count { grid-column: 1 / 8; font-size: 13px; color: var(--color-text-secondary); font-weight: 600; }
         .desktop-batch-select {
-            min-width: 92px; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 8px;
+            width: 100%; min-width: 0; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 8px;
             background: var(--color-bg-card); color: var(--color-text); font-size: 12px; cursor: pointer;
         }
+        .desktop-batch-status { grid-column: 9; }
+        .desktop-batch-method { grid-column: 10; }
         .desktop-batch-confirm {
+            grid-column: 12;
             padding: 8px 14px; border: 0; border-radius: 8px;
             background: var(--color-primary); color: var(--color-bg-card); font-size: 12px; font-weight: 600; cursor: pointer;
         }
