@@ -965,13 +965,45 @@
             invalidateFilterCache(); queueUpsert(r); saveData(); saveToCloud(records, true);
         }
 
-        function stepMobileNumber(btn, delta, min, precision) {
+        function formatStepValue(value, precision) {
+            return precision ? money(value).toFixed(precision).replace(/\.?0+$/, '') : String(Math.round(value));
+        }
+
+        function refreshMobileRecordCard(id) {
+            const r = records.find(r => r.id === id);
+            const card = document.querySelector('.record-card[data-row-id="' + id + '"]');
+            if (!r || !card) return;
+            const total = card.querySelector('.mobile-card-total-text');
+            const price = card.querySelector('.mobile-card-price-text');
+            const qty = card.querySelector('.mobile-card-qty-text');
+            if (total) total.textContent = '¥' + r.total;
+            if (price) price.textContent = '单价 ¥' + r.price;
+            if (qty) qty.textContent = '数量 ' + r.qty;
+        }
+
+        function updateMobileNumberInput(input, id, field) {
+            if (field === 'price') updatePrice(id, input.value);
+            else updateQty(id, input.value);
+            refreshMobileRecordCard(id);
+            updateStats();
+            updateSelectedStats();
+        }
+
+        function stepMobileNumber(btn, id, field, delta, min, precision) {
             const input = btn.parentElement.querySelector('input');
             if (!input) return;
             const current = Number(input.value) || 0;
             const next = Math.max(min, current + delta);
-            input.value = precision ? money(next).toFixed(precision).replace(/\.?0+$/, '') : String(Math.round(next));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
+            input.value = formatStepValue(next, precision);
+            updateMobileNumberInput(input, id, field);
+        }
+
+        function stepFormNumber(inputId, delta, min, precision) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const current = Number(input.value) || 0;
+            const next = Math.max(min, current + delta);
+            input.value = formatStepValue(next, precision);
         }
 
         function updatePayment(id, paidValue, methodValue) {
@@ -1370,9 +1402,9 @@
                         '</div>' +
                     '</div>' +
                     '<div class="record-card-summary">' +
-                        '<strong>¥' + esc(r.total) + '</strong>' +
-                        '<span>单价 ¥' + esc(r.price) + '</span>' +
-                        '<span>数量 ' + esc(r.qty) + '</span>' +
+                        '<strong class="mobile-card-total-text">¥' + esc(r.total) + '</strong>' +
+                        '<span class="mobile-card-price-text">单价 ¥' + esc(r.price) + '</span>' +
+                        '<span class="mobile-card-qty-text">数量 ' + esc(r.qty) + '</span>' +
                         (r.method ? '<span>' + esc(r.method) + '</span>' : '') +
                     '</div>' +
                     '<details class="record-card-edit">' +
@@ -1383,14 +1415,14 @@
                         '</div>' +
                         '<div class="record-card-row">' +
                             '<div class="mobile-number-field">' +
-                                '<button type="button" class="mobile-step-btn" aria-label="减少单价" onclick="stepMobileNumber(this, -1, 0, 2)">-</button>' +
-                                '<input type="number" inputmode="decimal" value="' + esc(r.price) + '" aria-label="单价" onchange="updatePrice(' + r.id + ', this.value);batchRender()">' +
-                                '<button type="button" class="mobile-step-btn" aria-label="增加单价" onclick="stepMobileNumber(this, 1, 0, 2)">+</button>' +
+                                '<button type="button" class="mobile-step-btn" aria-label="减少单价" onclick="stepMobileNumber(this, ' + r.id + ', \'price\', -1, 0, 2)">-</button>' +
+                                '<input type="number" inputmode="decimal" value="' + esc(r.price) + '" aria-label="单价" onchange="updateMobileNumberInput(this, ' + r.id + ', \'price\')">' +
+                                '<button type="button" class="mobile-step-btn" aria-label="增加单价" onclick="stepMobileNumber(this, ' + r.id + ', \'price\', 1, 0, 2)">+</button>' +
                             '</div>' +
                             '<div class="mobile-number-field">' +
-                                '<button type="button" class="mobile-step-btn" aria-label="减少数量" onclick="stepMobileNumber(this, -1, 1, 0)">-</button>' +
-                                '<input type="number" inputmode="numeric" value="' + esc(r.qty) + '" min="1" aria-label="数量" onchange="updateQty(' + r.id + ', this.value);batchRender()">' +
-                                '<button type="button" class="mobile-step-btn" aria-label="增加数量" onclick="stepMobileNumber(this, 1, 1, 0)">+</button>' +
+                                '<button type="button" class="mobile-step-btn" aria-label="减少数量" onclick="stepMobileNumber(this, ' + r.id + ', \'qty\', -1, 1, 0)">-</button>' +
+                                '<input type="number" inputmode="numeric" value="' + esc(r.qty) + '" min="1" aria-label="数量" onchange="updateMobileNumberInput(this, ' + r.id + ', \'qty\')">' +
+                                '<button type="button" class="mobile-step-btn" aria-label="增加数量" onclick="stepMobileNumber(this, ' + r.id + ', \'qty\', 1, 1, 0)">+</button>' +
                             '</div>' +
                         '</div>' +
                         '<div class="record-card-row">' +

@@ -128,6 +128,8 @@
         }
         .input-group input:focus, .input-group select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
         .input-group input.invalid, .input-group select.invalid { border-color: var(--color-danger); box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
+        .input-stepper { display: block; }
+        .input-stepper .mobile-step-btn { display: none; }
         .suggest-list {
             display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--color-bg-card);
             border: 1px solid var(--color-border); border-radius: 10px; max-height: 180px; overflow-y: auto;
@@ -346,6 +348,9 @@
             .input-area .input-group { min-width: 0; }
             .input-area .input-group input,
             .input-area .input-group select { padding: 11px; font-size: 15px; border-radius: 8px; background: var(--color-bg-hover); height: 44px; width: 100%; box-sizing: border-box; }
+            .input-area .input-group input[type="number"] { font-size: 16px; }
+            .input-area .input-stepper { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; gap: 5px; align-items: stretch; }
+            .input-area .input-stepper .mobile-step-btn { display: block; min-height: 44px; }
             .input-area .input-group input[type="date"] { padding: 0 12px !important; -webkit-appearance: none !important; appearance: none !important; }
             .btn-add { grid-column: span 2; padding: 14px; font-size: 16px; border-radius: 8px; }
 
