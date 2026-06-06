@@ -2589,6 +2589,7 @@
                 if (isRefreshing || window.scrollY > 1 || document.documentElement.scrollTop > 1 || document.body.scrollTop > 1) return false;
                 const target = e.target;
                 if (target && target.closest && target.closest('input, textarea, select, button, .modal')) return false;
+                if (target && target.closest && target.closest('#mobileRecordCards, .record-card')) return false;
                 return true;
             }
 
